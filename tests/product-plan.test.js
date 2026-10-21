@@ -6,8 +6,10 @@ const {execFileSync}=require('node:child_process');
 const root=path.resolve(__dirname,'..');
 const document=fs.readFileSync(path.join(root,'docs/product-plan.md'),'utf8');
 
-test('产品方案的 Demo 基线可追溯，六个工具范围与基线代码一致',()=>{
+test('产品方案的 Demo 基线可追溯，六个工具范围与基线代码一致',t=>{
  const hash=document.match(/基线提交：`([a-f0-9]{40})`/)[1];
+ // The public repository is a history-free snapshot; the baseline commit only exists in the full development history.
+ try{execFileSync('git',['cat-file','-e',hash+'^{commit}'],{cwd:root,stdio:'ignore'});}catch(_){return t.skip('基线提交不在当前仓库历史中（公开快照无历史）');}
  const source=execFileSync('git',['show',hash+':utils/tool-interfaces.js'],{cwd:root,encoding:'utf8'});
  const tools=[...source.matchAll(/\{id:'([^']+)',name:'([^']+)'\}/g)];
  assert.equal(tools.length,6);

@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  node:
+    name: Node tests (mini program, pages, docs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run tests
+        env:
+          YOUAI_TEST_PYTHON: python3
+        # tests/codex-http-repair.test.js covers a separate desktop tool and needs a local Codex CLI and a built bundle.
+        run: node --test $(ls tests/*.test.js | grep -v codex-http-repair)
+
+  python:
+    name: Python tests (backend, MCP gateway)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install fonts and dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q fonts-noto-cjk
+          pip install pillow==11.3.0 imageio-ffmpeg==0.6.0 numpy
+      - name: Run tests
+        working-directory: scripts
+        env:
+          YOUAI_ASSET_ROOT: ${{ runner.temp }}/youai/assets
+          YOUAI_TOOL_ASSET_ROOT: ${{ runner.temp }}/youai/tools
+          YOUAI_RENDER_ROOT: ${{ runner.temp }}/youai/render
+          YOUAI_FEISHU_CONFIG: ${{ runner.temp }}/youai/none.json
+          YOUAI_FEISHU_STATE: ${{ runner.temp }}/youai/feishu-state.json
+          YOUAI_REFERENCE_RELAY_STATE: ${{ runner.temp }}/youai/relay.json
+          YOUAI_REFERENCE_RELAY_CREDENTIALS: ${{ runner.temp }}/youai/relay.env
+          YOUAI_VIDEO_FONT: /usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc
+          YOUAI_BOARD_FONT: /usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python -m unittest test-mcp-gateway test-creation-board test-breakdown-quality test-video-server

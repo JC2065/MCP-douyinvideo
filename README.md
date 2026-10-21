@@ -11,9 +11,11 @@
 [![Node.js tests](https://img.shields.io/badge/tests-node%20--test%20%2B%20unittest-339933?logo=nodedotjs&logoColor=white)](#-测试与开发规范)
 [![MCP](https://img.shields.io/badge/MCP-Streamable%20HTTP-6E56CF)](#-远程-mcp抖音解析与下载)
 [![Docker](https://img.shields.io/badge/deploy-Docker-2496ED?logo=docker&logoColor=white)](compose.video-cloud.yml)
-[![License](https://img.shields.io/badge/license-All%20rights%20reserved-lightgrey)](#-许可证)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/JC2065/MCP-douyinvideo/actions/workflows/ci.yml/badge.svg)](https://github.com/JC2065/MCP-douyinvideo/actions/workflows/ci.yml)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-[功能](#-功能亮点) · [工作流](#-工作流) · [架构](#-架构) · [MCP 接入](#-远程-mcp抖音解析与下载) · [快速开始](#-快速开始) · [目录](#-目录结构) · [文档](#-文档索引) · [路线图](#-路线图)
+[功能](#-功能亮点) · [工作流](#-工作流) · [架构](#-架构) · [MCP 接入](#-远程-mcp抖音解析与下载) · [快速开始](#-快速开始) · [目录](#-目录结构) · [文档](#-文档索引) · [路线图](#-路线图) · [贡献](#-参与贡献)
 
 </div>
 
@@ -236,11 +238,20 @@ cd scripts && python3 -m unittest test-creation-board test-mcp-gateway   # 后�
 - [ ] 预览视频在分析阶段后台预生成
 - [ ] 面向外部开发者的一键自托管部署
 
+## 🤝 参与贡献
+
+欢迎提交 Issue 和 Pull Request！开始之前请阅读：
+
+- [贡献指南](CONTRIBUTING.md)：开发环境、分支与提交规范、测试要求
+- [行为准则](CODE_OF_CONDUCT.md)
+- [安全策略](SECURITY.md)：如何私下报告漏洞
+- [更新日志](CHANGELOG.md)
+
 ## 🔒 安全与隐私
 
 - 仓库不包含任何 API Key、访问令牌或数据库；所有凭据只存在于服务器受限文件与维护者本机。
 - 用户自带的模型 Key（BYOK）不存储、不记日志；后台数据截图识别后不保存；评论者身份不保存。
-- 发现安全问题请通过 GitHub Issues 联系维护者，请勿在公开 Issue 中贴出可利用细节。
+- 发现安全问题请按 [SECURITY.md](SECURITY.md) 私下报告，请勿在公开 Issue 中贴出可利用细节。
 
 ## ⚖️ 使用声明
 
@@ -254,4 +265,6 @@ cd scripts && python3 -m unittest test-creation-board test-mcp-gateway   # 后�
 
 ## 📄 许可证
 
-暂未选择开源许可证，**保留所有权利**。你可以浏览和学习代码；如需复制、修改或再发布，请先联系作者。
+本项目代码以 [MIT 许可证](LICENSE) 开源，Copyright © 2026 JC2065。
+
+**例外**：`case-study/`、`study-201/`～`study-204/` 以及 `assets/` 中的示例视频、关键帧与案例图片仅用于功能演示，版权归原作者所有，**不在 MIT 授权范围内**，请勿单独复制或再发布。

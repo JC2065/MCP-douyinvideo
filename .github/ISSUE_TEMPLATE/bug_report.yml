@@ -1,0 +1,40 @@
+name: 问题反馈 / Bug report
+description: 报告一个可以复现的问题
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: 感谢反馈！提交前请先搜索是否已有相同 Issue。**安全问题请不要在这里提交**，见 SECURITY.md。
+  - type: dropdown
+    id: area
+    attributes:
+      label: 涉及部分
+      options: [小程序界面, 爆款拆解 / 创作产出, 后端接口, 远程 MCP, 部署与运维, 文档, 其他]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: 发生了什么
+      description: 实际看到的现象，可附截图（请遮挡手机号、令牌等隐私信息）
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开…
+        2. 点击…
+        3. 看到…
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+  - type: input
+    id: env
+    attributes:
+      label: 环境
+      placeholder: 例如 微信 8.0.x / 开发者工具 2.02.x / iOS 18 / 提交号 2979f32
