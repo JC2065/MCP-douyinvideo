@@ -1,0 +1,11 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>YOUAI 流程与MCP中台 · 设计预览</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="notice">交互设计稿 · 本地示例 · 尚未连接生产流程、AI、MCP或飞书写入</div>
+<div class="layout"><aside><a class="brand" href="#">YOUAI<span>流程与数据中台</span></a><nav id="nav" aria-label="管理板块"></nav><p class="side-note">一份流程定义<br>网页与小程序共用</p></aside>
+<main><header><div><p class="eyebrow">创作能力管理</p><h1 id="title"></h1><p id="description"></p></div><span class="badge">设计版本 0.1</span></header>
+<section id="overview" hidden></section><section id="workspace" hidden>
+<div class="toolbar"><div class="tabs" role="group" aria-label="流程模式"><button id="default">默认流程</button><button id="custom">自定义流程</button></div><span id="version"></span><button id="reset" class="quiet">恢复当前预览</button></div>
+<div class="editor-layout"><div><section class="panel"><div class="panel-heading"><h2>流程编排</h2><span id="scope"></span></div><p class="hint">确认节点约束任务顺序。步骤修改先形成草案，再经预览、校验与发布。</p><ol id="steps"></ol></section>
+<section id="conversation" class="panel" hidden><h2>与 Skill 一起设计</h2><p>描述平台、受众、风格、时长和需要的成果，Skill 给出流程差异与待确认问题。</p><label for="need">你的需求</label><textarea id="need" maxlength="1000" placeholder="例如：我要做15秒咖啡店口播，面向上班族，语气轻松，先给我确认脚本，再生成。"></textarea><button id="propose" class="primary">生成流程建议（本地预览）</button><p id="skill-reply" role="status"></p><p class="hint">此设计稿使用本地规则演示对话后的编排效果，真实 Skill 接入遵循接口方案。</p></section>
+<section class="panel release"><h2>发布与回滚</h2><p>全局默认流程由管理员发布；个人流程仅由所属用户确认。运行中的任务保留原版本快照。</p><button id="validate" class="primary">校验当前草案</button><button id="preview" class="quiet">更新小程序预览</button><p id="message" role="status"></p></section></div>
+<section class="phone-panel"><div class="panel-heading"><h2>小程序映射</h2><span>同一份定义</span></div><div class="phone"><div class="phone-nav">YOUAI</div><div class="phone-content"><span class="phone-tag">创作流程</span><h3 id="phone-title"></h3><p id="phone-mode"></p><div id="phone-steps"></div><button class="primary" disabled>确认并继续</button></div></div><p class="hint">此处预览固定组件如何渲染流程数据，真实运行需要后端执行器与新版客户端接入。</p></section></div>
+</section></main></div><script src="model.js"></script><script src="mapping.js"></script><script src="app.js"></script><script src="mapping-ui.js"></script></body></html>

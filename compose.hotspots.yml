@@ -1,0 +1,21 @@
+name: youai-hotspots
+services:
+  dailyhot:
+    image: youai-dailyhot:2.0.8
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+    environment:
+      PORT: 6688
+      CACHE_TTL: 600
+      REQUEST_TIMEOUT: 10000
+      USE_LOG_FILE: 'false'
+      REDIS_DISABLED: 'true'
+    networks: [internal]
+    logging:
+      driver: json-file
+      options: {max-size: 5m, max-file: '2'}
+networks:
+  internal:
+    external: true
+    name: youai-cloud_default

@@ -1,0 +1,19 @@
+{
+  "manifest_version": "0.3",
+  "name": "codex-http-repair",
+  "display_name": "Codex HTTP 连接修复",
+  "version": "1.0.0",
+  "description": "检查 Codex 连接配置，禁用模型请求 WebSocket，备份并支持恢复。",
+  "author": { "name": "YOUAI" },
+  "server": {
+    "type": "node",
+    "entry_point": "server.cjs",
+    "mcp_config": { "command": "node", "args": ["${__dirname}/server.cjs"] }
+  },
+  "tools": [
+    { "name": "codex_connection_inspect", "description": "检查本机 Codex 配置并预览 HTTP 修复，不返回凭据。" },
+    { "name": "codex_connection_repair", "description": "备份并应用已预览的 HTTP 修复，需要配置指纹。" },
+    { "name": "codex_connection_restore", "description": "恢复本工具备份；后续配置已变更时拒绝覆盖。" }
+  ],
+  "compatibility": { "platforms": ["win32", "darwin", "linux"], "runtimes": { "node": ">=20.0.0" } }
+}

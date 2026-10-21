@@ -1,0 +1,6 @@
+const test=require('node:test');const assert=require('node:assert/strict');const crypto=require('node:crypto');
+const asset=require('../case-study/assets/video87');const {prepare}=require('../case-study/video-source');
+test('离线编码无损，MP4 元数据前置，版本对应内容',()=>{const b=Buffer.from(asset.base64,'base64');assert.equal(b.length,asset.bytes);assert.equal(crypto.createHash('sha256').update(b).digest('hex').slice(0,16),asset.version);assert.equal(b.toString('ascii',4,8),'ftyp');assert.ok(b.indexOf('moov')<b.indexOf('mdat'));});
+function api(size,fail=false){const writes=[];return{writes,env:{USER_DATA_PATH:'/user'},getFileSystemManager(){return{stat(o){size===null?o.fail({}):o.success({stats:{size}})},writeFile(o){writes.push(o);fail?o.fail({errMsg:'quota exceeded'}):o.success()}}}};}
+test('首次解码到用户目录，正确缓存复用，损坏长度与强制重试重建',async()=>{const a=api(null);const p=await prepare(a);assert.ok(p.startsWith('/user/youai-87-'));assert.equal(a.writes[0].encoding,'base64');assert.equal(a.writes[0].data,asset.base64);const cached=api(asset.bytes);await prepare(cached);assert.equal(cached.writes.length,0);await prepare(cached,true);assert.equal(cached.writes.length,1);const broken=api(10);await prepare(broken);assert.equal(broken.writes.length,1);});
+test('写入失败传给页面，不能返回不可用路径',async()=>{await assert.rejects(prepare(api(null,true)),e=>e.errMsg==='quota exceeded');});

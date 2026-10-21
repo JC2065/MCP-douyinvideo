@@ -1,0 +1,14 @@
+.git
+.env*
+!.env.example
+node_modules
+dist
+tools
+tests
+docs
+web
+assets
+pages
+components
+study-*
+case-study

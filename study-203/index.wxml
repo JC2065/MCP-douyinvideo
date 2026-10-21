@@ -1,0 +1,2 @@
+<app-navigation class="app-navigation" title="案例拆解 · YOUAI"/>
+<include src="../templates/study.wxml"/>

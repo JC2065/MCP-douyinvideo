@@ -1,0 +1,8 @@
+node_modules/
+__pycache__/
+*.pyc
+project.private.config.json
+.env
+.env.*
+!.env.example
+deploy-diagnose.log

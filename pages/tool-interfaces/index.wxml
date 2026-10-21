@@ -1,0 +1,25 @@
+<app-navigation class="app-navigation" title="工具接口管理"/>
+<view class="shell tool-interfaces">
+ <view class="heading">工具接口管理</view>
+ <view class="sub">选择公共服务，或为工具配置自己的接口。</view>
+ <view class="interface-tools"><button wx:for="{{tools}}" wx:key="id" class="interface-tool {{selected===item.id?'selected':''}}" data-id="{{item.id}}" bindtap="select"><image src="/assets/icons/{{item.id}}-selected.png"/><text>{{item.name}}</text><text class="interface-tool-source">{{item.source==='public'?'平台公共':'个人配置'}}</text></button></view>
+ <view class="card interface-config">
+  <view class="row"><text class="strong">{{name}}</text><text class="muted">{{dirty?'有未保存修改':status}}</text></view>
+  <view class="interface-sources"><button class="{{source==='public'?'selected':''}}" data-source="public" bindtap="source">平台公共接口</button><button wx:if="{{allowCustom}}" class="{{source==='personal'?'selected':''}}" data-source="personal" bindtap="source">个人配置</button></view>
+  <form bindsubmit="save">
+   <view wx:if="{{source==='public'}}" class="interface-public"><text class="badge">所有用户可用 · 只读</text><view class="body">由平台统一维护，个人修改不会影响其他用户。</view><view class="muted">公共服务尚未配置，配置完成后可使用。</view></view>
+   <block wx:else>
+    <view class="interface-local">仅本机保存，切换商家或创作者共用此配置。</view>
+    <view class="interface-label">接口地址</view><input class="input" name="url" value="{{form.url}}" bindinput="field" data-field="url" placeholder="https://api.example.com/tool" maxlength="500"/>
+    <view class="interface-label">请求方式</view><view class="chips"><text wx:for="{{['POST','GET']}}" wx:key="*this" class="chip {{form.method===item?'active':''}}" data-value="{{item}}" bindtap="method">{{item}}</text></view>
+    <view class="interface-label">身份认证</view><view class="chips"><text class="chip {{form.auth==='none'?'active':''}}" data-value="none" bindtap="auth">无需认证</text><text class="chip {{form.auth==='bearer'?'active':''}}" data-value="bearer" bindtap="auth">访问令牌</text></view>
+    <input wx:if="{{form.auth==='bearer'}}" class="input" name="token" password value="{{form.token}}" bindinput="field" data-field="token" placeholder="填写 Bearer Token" maxlength="2000"/>
+    <view class="muted">地址与令牌只用于你选择的个人接口。参考解析配置保存后需要连接检测；检测超过 7 天会提醒复查。</view>
+    <button wx:if="{{selected==='download'}}" class="secondary interface-save" type="button" bindtap="check" loading="{{checking}}" disabled="{{checking}}">检测参考解析服务</button>
+   </block>
+   <view wx:if="{{error}}" class="interface-error">{{error}}</view>
+   <button class="primary interface-save" form-type="submit">保存配置</button>
+  </form>
+  <button class="interface-clear" bindtap="clear">清除当前工具的个人配置</button>
+ </view>
+</view>

@@ -1,0 +1,48 @@
+name: youai-video
+services:
+  video:
+    image: codexyouai-video:${VIDEO_TAG:?Set video release tag}
+    restart: unless-stopped
+    env_file:
+      - path: ./credentials/video-provider.env
+        required: false
+      - path: ./credentials/reference-parser.env
+        required: false
+    ports: ["127.0.0.1:8765:8765"]
+    environment:
+      YOUAI_CLIENT_CONFIG: /data/admin/client-config.json
+      YOUAI_ADMIN_ROOT: /data/admin
+      YOUAI_ADMIN_AUTH: /credentials/admin-auth.json
+      YOUAI_ADMIN_ORIGIN: https://youai888.top
+      YOUAI_HOTSPOT_API: http://youai-hotspots-dailyhot-1:6688
+      YOUAI_VIDEO_HOST: 0.0.0.0
+      YOUAI_RENDER_ROOT: /data/render
+      YOUAI_ASSET_ROOT: /data/assets
+      YOUAI_TOOL_ASSET_ROOT: /data/tools
+      YOUAI_FEISHU_CONFIG: /credentials/feishu-matrix.json
+      YOUAI_FEISHU_STATE: /credentials/feishu-matrix-unified-state.json
+      YOUAI_WECHAT_CONFIG: /credentials/wechat-production.json
+      YOUAI_PUBLIC_ASSET_BASE_URL: https://youai888.top/youai
+      YOUAI_BACKEND_URL: http://youai-cloud-api-1:8080
+      YOUAI_REFERENCE_PARSER_URL: http://dtk-api-1:8000
+      YOUAI_REFERENCE_PARSER_INTERNAL_HTTP_HOSTS: dtk-api-1
+      YOUAI_VIDEO_FONT: /fonts/NotoSansCJK-Regular.ttc
+      YOUAI_WHISPER_MODEL: /models/faster-whisper-tiny
+    volumes:
+      - ./models:/models:ro
+      - ./video-data:/data
+      - ./credentials:/credentials:ro
+      - /usr/share/fonts/opentype/noto:/fonts:ro
+    networks: [internal, parser]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/health',timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+networks:
+  internal:
+    external: true
+    name: youai-cloud_default
+  parser:
+    external: true
+    name: dtk_edge

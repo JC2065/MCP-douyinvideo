@@ -1,0 +1,49 @@
+<app-navigation class="app-navigation" title="{{navTitle}}"/>
+<view class="page board-work">
+ <block wx:if="{{!id}}">
+  <view class="tabs"><text wx:for="{{groups}}" wx:key="id" class="tab {{tab===item.id?'active':''}}" data-tab="{{item.id}}" bindtap="tabPick">{{item.label}} {{item.count}}</text></view>
+  <view wx:if="{{panel.count}}" class="card panel"><view class="panel-head"><text class="strong">{{tab==='own'?'我的作品概览':'对标作品概览'}}</text><text class="muted">已监控 {{panel.count}} 条</text></view>
+   <view class="panel-grid"><view wx:for="{{panel.totals}}" wx:key="key" class="panel-cell"><text class="panel-num">{{item.value}}</text><text class="lab">总{{item.label}}</text><text class="up">{{item.today||' '}}</text></view></view>
+   <view wx:if="{{panel.gainNum}}" class="panel-gain">较上次记录新增互动 <text class="up-strong">+{{panel.gain}}</text></view><view wx:elif="{{!panel.multi}}" class="panel-gain">每天自动记录一次，明天起能看到每天涨了多少</view><view wx:else class="panel-gain">较上次记录暂无新增</view></view>
+  <view wx:if="{{panel.rising.length}}" class="card"><view class="strong">涨得最快</view>
+   <view wx:for="{{panel.rising}}" wx:key="id" class="rise-row" data-id="{{item.id}}" bindtap="openWork"><text class="rise-rank">{{index+1}}</text><text class="work-title">{{item.title}}</text><text class="up-strong">{{item.gainText}}</text></view></view>
+  <view wx:if="{{compare}}" class="card"><view class="strong">我的作品 vs 对标作品</view><view class="muted">平均每条作品 · {{compare.note}}</view>
+   <view wx:for="{{compare.lines}}" wx:key="key" class="cmp"><text class="cmp-label">{{item.label}}</text><view class="cmp-bars"><view class="cmp-bar"><view class="cmp-fill own" style="width:{{item.ownW}}%"></view><text class="cmp-val">{{item.own}}</text></view><view class="cmp-bar"><view class="cmp-fill bench" style="width:{{item.benchW}}%"></view><text class="cmp-val">{{item.bench}}</text></view></view></view>
+   <view class="cmp-legend"><text class="dot own"></text>我的作品<text class="dot bench"></text>对标作品</view></view>
+  <view wx:elif="{{works.length}}" class="muted cmp-hint">{{groups[0].count&&groups[1].count?'等两边都有数据后，这里会对比我的作品和对标作品':'同时监控我的作品和对标作品，就能在这里对比两边的平均数据'}}</view>
+  <view class="card"><view class="strong">{{tab==='own'?'添加我的作品':'添加对标作品'}}</view><view class="muted">{{tab==='own'?'你自己发布的作品，不是用有AI做的也可以；还能补传创作者后台截图，参与复盘对比。':'对标账号的作品，跟踪它每天涨了多少，连续 14 天。'}}</view>
+   <view class="add-row"><input class="field grow" value="{{link}}" placeholder="{{tab==='own'?'粘贴你发布的抖音作品链接':'粘贴对标账号的抖音作品链接'}}" bindinput="linkInput" bindconfirm="addMonitor"/><button class="add-go" bindtap="addMonitor" loading="{{busy}}" disabled="{{busy||!link}}">监控</button></view></view>
+  <view wx:if="{{!shown.length&&!error}}" class="muted empty-tip">{{tab==='own'?'还没有你的作品数据。拆解后点「生成发布包并回传数据」，或在上面贴你发布的作品链接。':'还没有对标作品。贴一条对标账号的作品链接，开始跟踪它的数据。'}}</view>
+  <view wx:for="{{shown}}" wx:key="id" class="card work-row" data-id="{{item.id}}" bindtap="openWork">
+   <view class="row-head"><text class="strong work-title">{{item.title}}</text><text class="tag {{item.kind}}">{{item.badge}}</text></view>
+   <view wx:if="{{item.stats.length}}" class="stats"><view wx:for="{{item.stats}}" wx:for-item="s" wx:key="key" class="stat"><text class="num">{{s.value}}</text><text class="lab">{{s.label}}</text><text wx:if="{{s.delta}}" class="up">{{s.delta}}</text></view></view>
+   <view wx:if="{{item.spark.length}}" class="spark"><view wx:for="{{item.spark}}" wx:for-item="h" wx:key="index" class="spark-bar" style="height:{{h}}%"></view></view>
+   <view class="muted">{{item.author?item.author+' · ':''}}{{item.state}}</view>
+  </view>
+ </block>
+ <block wx:elif="{{work}}">
+  <view wx:if="{{monitor}}" class="card"><view class="row-head"><text class="strong work-title">{{work.title}}</text><text class="tag {{summary.kind}}">{{summary.badge}}</text></view>
+   <view class="muted">{{work.author?work.author+' · ':''}}{{summary.state}}</view>
+   <view wx:if="{{summary.stats.length}}" class="stats"><view wx:for="{{summary.stats}}" wx:for-item="s" wx:key="key" class="stat"><text class="num">{{s.value}}</text><text class="lab">{{s.label}}</text><text wx:if="{{s.delta}}" class="up">{{s.delta}}</text></view></view>
+   <view class="acts"><button class="act act-main" bindtap="refreshNow" disabled="{{busy}}">刷新</button><button class="act" bindtap="copyLink">复制链接</button><button class="act" bindtap="switchRole" disabled="{{busy}}">{{benchmark?'改为我的':'改为对标'}}</button><button class="act act-danger" bindtap="removeMonitor" disabled="{{busy}}">移除</button></view></view>
+  <view wx:else class="card"><view class="strong">发布包</view><view class="body">{{work.publishText}}</view><view wx:if="{{work.cover}}" class="muted">封面大字：{{work.cover}}</view><button size="mini" bindtap="copyPublish">复制标题和话题</button></view>
+  <view wx:if="{{!monitor}}" class="card"><view class="strong">1. 发布后贴回作品链接（自动抓取公开数据）</view><input class="field" value="{{link}}" placeholder="粘贴你发布的抖音作品分享链接" bindinput="linkInput"/>
+   <view class="row"><button size="mini" bindtap="saveLink" disabled="{{busy||!link}}">关联作品</button><button size="mini" bindtap="subscribe">第 1、3 天提醒我回传</button><button wx:if="{{work.link}}" size="mini" bindtap="refreshNow" disabled="{{busy}}">刷新数据</button></view></view>
+  <view wx:if="{{trend.length}}" class="card"><view class="strong">数据变化</view><view class="muted">公开数据每天自动记录一次，可随时手动刷新</view>
+   <view class="trend"><view class="trend-row trend-headrow"><text class="trend-day"></text><text wx:for="{{keyLabels}}" wx:key="*this">{{item}}</text></view>
+    <view wx:for="{{trend}}" wx:key="day" class="trend-row"><text class="trend-day">{{item.label}}</text><text wx:for="{{item.cells}}" wx:for-item="c" wx:key="index">{{c}}</text></view></view></view>
+  <view wx:if="{{!benchmark}}" class="card"><view class="strong">{{monitor?'上传创作者后台截图（可选，识别后截图不保存）':'2. 上传创作者后台截图（识别后截图不保存）'}}</view>
+   <view wx:if="{{monitor}}" class="muted">补充完播率、平均播放时长等只有后台能看到的数据，复盘时会和你的其他作品对比。</view>
+   <view class="row"><text wx:for="{{[1,2,3]}}" wx:key="*this" class="chip {{day===item?'active':''}}" data-day="{{item}}" bindtap="dayPick">第 {{item}} 天</text></view>
+   <button size="mini" bindtap="chooseScreenshot" disabled="{{busy}}">选择截图自动识别</button>
+   <view wx:for="{{values}}" wx:key="key" class="metric-row"><text>{{item.label}}</text><input type="digit" value="{{item.value}}" data-index="{{index}}" bindinput="valueInput" placeholder="可不填"/></view>
+   <button class="primary" bindtap="saveMetrics" disabled="{{busy}}">核对后保存</button></view>
+  <view wx:if="{{work.review}}" class="card"><view class="strong">复盘卡</view><view class="body">{{work.review.note}}（可信度{{work.review.confidence}}）</view>
+   <view wx:for="{{work.review.findings}}" wx:key="element" class="body">· {{item.element}}：{{item.verdict}}（{{item.why}}）</view>
+   <view wx:if="{{work.review.interactionPercent!==null}}" class="muted">你的互动率 {{work.review.interactionPercent}}%<text wx:if="{{work.review.originalInteractionPerFollower!==null}}">；原视频互动/粉丝 {{work.review.originalInteractionPerFollower}}</text></view>
+   <view class="muted">{{work.review.disclaimer}}</view></view>
+  <view wx:if="{{!monitor}}" class="card"><view class="strong">回传奖励</view><view class="body">可用次数 {{work.credits.balance}} · 已回传 {{work.credits.reportedWorks}} 条</view>
+   <view class="muted">{{work.credits.reportUnlocked?'已解锁专属复盘报告':'再回传 '+work.credits.nextUnlock+' 条解锁专属复盘报告'}}；{{work.credits.predictUnlocked?'已解锁发布前预估（全站数据充足时显示）':'回传更多作品可解锁发布前预估'}}</view></view>
+ </block>
+ <view wx:if="{{notice}}" class="muted">{{notice}}</view><view wx:if="{{error}}" class="error-text">{{error}}</view>
+</view>

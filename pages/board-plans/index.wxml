@@ -1,0 +1,26 @@
+<app-navigation class="app-navigation" title="拆解方案"/>
+<view class="page board-plans">
+ <view class="tabs"><text class="tab {{tab==='mine'?'active':''}}" data-tab="mine" bindtap="tab">我的方案</text><text class="tab {{tab==='builtin'?'active':''}}" data-tab="builtin" bindtap="tab">内置方案</text><text class="tab {{tab==='new'?'active':''}}" data-tab="new" bindtap="tab">新建</text></view>
+ <block wx:if="{{editing}}"><view class="card"><view class="strong">编辑方案</view>
+  <input class="field" value="{{editing.name}}" data-key="name" bindinput="editName" placeholder="方案名称"/><input class="field" value="{{editing.fitFor}}" data-key="fitFor" bindinput="editName" placeholder="适用的视频"/>
+  <view wx:for="{{editing.fields}}" wx:key="key" class="edit-field"><input class="field" value="{{item.label}}" data-index="{{index}}" data-key="label" bindinput="editField" placeholder="字段名"/>
+   <textarea class="field small" value="{{item.ask}}" data-index="{{index}}" data-key="ask" bindinput="editField" placeholder="让 AI 怎么回答"/>
+   <view class="row"><picker range="{{formats}}" range-key="name" data-index="{{index}}" data-key="format" bindchange="editPick"><text class="chip">格式：{{item.format}}</text></picker><picker range="{{uses}}" range-key="name" data-index="{{index}}" data-key="useIn" bindchange="editPick"><text class="chip">用于：{{item.useIn}}</text></picker><text class="link" data-index="{{index}}" bindtap="removeField">删除</text></view></view>
+  <view class="row"><button size="mini" bindtap="addField">加字段</button><button size="mini" bindtap="cancelEdit">取消</button><button size="mini" class="primary" bindtap="saveEdit" disabled="{{busy}}">保存为新版本</button></view></view></block>
+ <block wx:elif="{{tab==='new'}}">
+  <view class="card"><view class="strong">说说你想怎么拆</view><textarea class="field" value="{{chat}}" placeholder="例如：按情侣日常反转剧情来拆，重点看反转和台词" bindinput="chatInput"/>
+   <button size="mini" bindtap="chatDraft" disabled="{{busy||!chat}}" loading="{{busy}}">生成方案</button>
+   <view wx:if="{{draft}}"><view class="strong">{{draft.name}} · {{draft.fitFor}}</view><view wx:for="{{draft.fields}}" wx:key="key" class="body">· {{item.label}}：{{item.ask}}</view><button size="mini" class="primary" bindtap="saveDraft">保存方案</button></view></view>
+  <view class="card"><view class="strong">按博主风格：贴同一博主 3–5 条视频</view><textarea class="field" value="{{links}}" placeholder="每行一条抖音分享链接" bindinput="linksInput"/>
+   <button size="mini" bindtap="induce" disabled="{{busy||job.status==='running'}}">归纳共同套路</button><view wx:if="{{job}}" class="muted">{{job.message}}</view>
+   <view class="muted">系统会逐条看懂样片（看过的不再计费），只总结手法，不收录博主原话。</view></view>
+ </block>
+ <block wx:else>
+  <view wx:for="{{tab==='mine'?mine:builtin}}" wx:key="id" class="card"><view class="strong">{{item.name}}<text class="muted"> · {{item.fitFor}}{{item.status==='draft'?' · 草稿':''}} · v{{item.version}}</text></view>
+   <view wx:for="{{item.fields}}" wx:for-item="field" wx:key="key" class="body">· {{field.label}}<text wx:if="{{field.evidence}}" class="muted">（{{field.evidence}}）</text></view>
+   <view class="row"><button size="mini" data-id="{{item.id}}" bindtap="fork">复制</button><block wx:if="{{tab==='mine'}}"><button size="mini" data-id="{{item.id}}" bindtap="edit">编辑</button><button size="mini" data-id="{{item.id}}" bindtap="remove">删除</button>
+    <button wx:for="{{item.history}}" wx:for-item="h" wx:key="version" size="mini" data-id="{{item.id}}" data-version="{{h.version}}" bindtap="rollback">回到 v{{h.version}}</button></block></view></view>
+  <view wx:if="{{tab==='mine'&&!mine.length}}" class="muted">还没有自己的方案。可以新建，或复制内置方案后修改；拆解时纠正类型也会自动生成草稿方案。</view>
+ </block>
+ <view wx:if="{{error}}" class="error-text">{{error}}</view>
+</view>

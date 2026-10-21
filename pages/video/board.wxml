@@ -1,0 +1,137 @@
+<!-- Creation board (docs/creation-board-plan.md): included by pages/video/index.wxml inside the idea stage. -->
+<template name="bdField"><view class="board-field"><view class="strong">{{label}}</view>
+ <view wx:if="{{format==='timeline'&&value.length}}"><view wx:for="{{value}}" wx:for-item="row" wx:key="start" class="board-row"><text class="board-time">{{row.start}}–{{row.end}}秒</text><text>{{row.text}}</text></view></view>
+ <view wx:elif="{{format==='list'&&value.length}}"><view wx:for="{{value}}" wx:for-item="row" wx:key="item" class="board-list">· {{row.item}}<text wx:if="{{row.level}}" class="board-level">可学{{row.level}}</text><view wx:if="{{row.how}}" class="muted">学法：{{row.how}}</view></view></view>
+ <view wx:elif="{{format==='score'&&value.score!==undefined}}">{{value.score}} / 10 · {{value.reason}}</view>
+ <view wx:else class="body">{{value}}</view></view></template>
+<view wx:if="{{board&&boardPrivacy}}" class="card board-privacy"><view class="muted">为了改进拆解与创作质量，你在创作板块中的会话内容（问答、纠正、拆解方案、产出路线）与作品数据会与账号关联上传，用于改进服务和全站统计；后台截图只用于识别数字，识别后不保存。所有问题都可以不回答。</view><button size="mini" bindtap="boardPrivacyOk">知道了</button></view>
+<view wx:if="{{board&&board.questions&&analysisStatus==='running'&&!quickBusy}}" class="card board-questions" catchtap="boardPause">
+ <block wx:if="{{board.questions.mode==='probe'}}"><view class="strong">等待时可以先说说（都可跳过）</view>
+  <view wx:for="{{board.questions.items}}" wx:key="key" class="board-question"><view class="muted">{{item.question}}</view>
+   <view class="board-chips"><text wx:for="{{item.options}}" wx:for-item="option" wx:key="*this" class="board-chip {{board.answers[item.key]===option?'active':''}}" data-key="{{item.key}}" data-value="{{option}}" bindtap="boardAnswer">{{option}}</text></view>
+   <view class="board-inline"><input class="board-input" placeholder="或自己写" data-key="{{item.key}}" bindinput="boardAnswerInput" bindconfirm="boardAnswerSubmit"/></view></view>
+  <view class="board-question"><view class="muted">还有别的想说的吗？</view><view class="board-inline"><input class="board-input" data-key="extra" value="{{board.answers.extra}}" placeholder="任何事都可以说，我能更好地输出内容" maxlength="300" bindinput="boardAnswerInput" bindconfirm="boardAnswerSubmit" bindblur="boardAnswerSubmit"/></view></view>
+ </block>
+ <block wx:elif="{{board.questions.mode==='followup'}}"><view class="strong">这是你第 2 次提交这条视频，上次哪里不满意？</view>
+  <view class="board-chips"><text wx:for="{{['理解','拆解','产出']}}" wx:key="*this" class="board-chip {{board.answers.dissatisfied===item?'active':''}}" data-key="dissatisfied" data-value="{{item}}" bindtap="boardAnswer">{{item}}</text></view>
+  <view wx:for="{{boardFollowups}}" wx:key="key" class="board-question"><view class="muted">{{item.question}}</view><view class="board-chips"><text wx:for="{{item.options}}" wx:for-item="option" wx:key="*this" class="board-chip {{board.answers[item.key]===option?'active':''}}" data-key="{{item.key}}" data-value="{{option}}" bindtap="boardAnswer">{{option}}</text></view></view>
+ </block>
+ <block wx:else><view class="strong">第 {{board.attempt}} 次提交这条视频，我们聊几句把需求说清楚</view>
+  <view wx:for="{{board.interview}}" wx:key="index" class="board-turn {{item.role}}">{{item.role==='ai'?'TA：':'我：'}}{{item.text}}</view>
+  <view wx:if="{{board.requirements}}" class="muted">需求摘要：{{board.requirements}}</view>
+  <view class="board-inline"><input class="board-input" value="{{boardInterviewMessage}}" placeholder="{{board.interview.length?'回答 TA 的问题':'先说说你想要什么'}}" bindinput="boardInterviewInput"/><button size="mini" bindtap="boardInterviewSend" disabled="{{boardBusy}}">发送</button></view>
+ </block>
+</view>
+
+<view wx:if="{{board.card&&analysisStatus==='done'&&!board.breakdown}}" id="board-confirm" class="card board-confirm" bindtouchstart="boardPause" bindlongpress="copyMenu" data-part="confirm">
+ <view class="seen-head"><view class="strong">我看到的是：</view><view class="mode-switch"><text class="mode-opt {{boardMode!=='replica'?'on':''}}" data-mode="super" catchtap="boardModePick">超级拆解</text><text class="mode-opt {{boardMode==='replica'?'on':''}}" data-mode="replica" catchtap="boardModePick">1:1 复刻</text></view></view><view wx:if="{{board.card.status==='local_only'||board.card.status==='unavailable'}}" class="watch-retry"><view class="watch-retry-title">{{board.card.status==='local_only'?'AI 观看额度用完了，这条还没看':'AI 这次没看成'}}</view><view class="muted">{{board.card.uncertainties[0]||board.card.overview}}</view><view wx:if="{{board.card.status==='local_only'}}" class="muted">额度恢复（每天 0 点，日本时间）或申请获批后，点下面再试一次就会重新解析，已取得的视频不用重新粘贴。</view><view wx:if="{{board.card.status==='local_only'}}" class="quota-actions"><button class="quota-buy" bindtap="quotaBuy">购买额度</button><button class="quota-apply" bindtap="quotaApplyOpen" disabled="{{quota.request.status==='pending'}}">{{quota.request.status==='pending'?'已申请 +'+quota.request.amount+'，等待审核':'申请增加额度'}}</button></view><view wx:if="{{board.card.status==='local_only'&&quota.request.status==='approved'&&quota.balance>0}}" class="quota-ok">已批准，额外额度剩 {{quota.balance}} 次，点「再试一次」继续</view><view wx:if="{{board.card.status==='local_only'&&quota.request.status==='rejected'}}" class="muted">上次申请未通过{{quota.request.note?'：'+quota.request.note:''}}</view><button class="primary" bindtap="retryWatch" disabled="{{analysisStatus==='running'}}">再试一次</button></view><view wx:else class="body">{{board.card.overview}}</view>
+ <view wx:if="{{board.card.type}}" class="watch-type"><text class="watch-chip strong">{{board.card.type}}</text><text wx:for="{{board.card.tags}}" wx:key="*this" class="watch-chip">#{{item}}</text></view>
+ <view wx:for="{{board.card.timeline}}" wx:key="index" class="board-row"><text class="board-time">{{item.start}}–{{item.end}}秒</text><text class="board-what">{{item.what}}</text>
+  <input wx:if="{{boardVerdict==='partial'}}" class="board-input" placeholder="✗ 不对就在这里改写" data-index="{{index}}" bindinput="boardFixInput"/></view>
+ <view wx:if="{{board.card.valueShares.length}}" class="muted">吸引力来自：<text wx:for="{{board.card.valueShares}}" wx:key="key">{{item.label}} {{item.percent}}%　</text></view>
+ <block wx:if="{{board.card.status!=='local_only'&&board.card.status!=='unavailable'}}">
+ <view class="board-plan"><text class="board-plan-name">正在使用『{{boardPlanChoice?boardPlanChoice.name:board.plan.name}}』方案深度拆解</text>
+  <view class="board-plan-links"><picker range="{{boardPlans}}" range-key="name" bindchange="boardPlanPick" bindtap="boardPlansLoad"><text class="link">换一个</text></picker><text class="link" bindtap="boardOpenPlans">管理方案</text></view></view>
+ <block wx:if="{{boardVerdict==='partial'}}">
+  <textarea class="board-text" placeholder="类型或意图不对？直接告诉 AI，例如：这其实是反差萌剧情，重点在反转" bindinput="boardStatementInput" maxlength="400"/>
+  <view class="board-inline"><input class="board-input short" type="digit" placeholder="从(秒)" data-key="start" bindinput="boardRangeInput"/><input class="board-input short" type="digit" placeholder="到(秒)" data-key="end" bindinput="boardRangeInput"/><button size="mini" bindtap="boardRewatch" disabled="{{boardBusy||!board.rewatchLeft}}">这段再看一遍（剩 {{board.rewatchLeft}} 次）</button></view>
+  <button class="primary prog-btn {{boardPct?'busy':''}}" data-verdict="partial" bindtap="boardConfirm" disabled="{{boardBusy||boardPct}}"><view wx:if="{{boardPct}}" class="parse-fill {{boardPct>=100?'full':''}}" style="width:{{boardPct}}%"></view><text class="parse-label">{{boardPct>=100?'拆解完成 100%':boardPct?'正在深度拆解 '+boardPct+'%':'按我的纠正拆解'}}</text></button>
+ </block>
+ <block wx:elif="{{boardVerdict==='wrong'}}">
+  <button bindtap="boardRewatch" disabled="{{boardBusy||!board.rewatchLeft}}">再仔细看一遍（剩 {{board.rewatchLeft}} 次）</button>
+  <textarea class="board-text" placeholder="我来描述：用一两句话说清视频内容" bindinput="boardDescribeInput" maxlength="400"/>
+  <button class="primary prog-btn {{boardPct?'busy':''}}" data-verdict="wrong" bindtap="boardConfirm" disabled="{{boardBusy||boardPct}}"><view wx:if="{{boardPct}}" class="parse-fill {{boardPct>=100?'full':''}}" style="width:{{boardPct}}%"></view><text class="parse-label">{{boardPct>=100?'拆解完成 100%':boardPct?'正在深度拆解 '+boardPct+'%':'按我的描述拆解'}}</text></button>
+ </block>
+ <view wx:else class="board-actions"><button class="primary prog-btn {{boardPct?'busy':''}}" data-verdict="ok" bindtap="boardConfirm" disabled="{{boardBusy||boardPct}}"><view wx:if="{{boardPct}}" class="parse-fill {{boardPct>=100?'full':''}}" style="width:{{boardPct}}%"></view><text class="parse-label">{{boardPct>=100?'拆解完成 100%':boardPct?'正在深度拆解 '+boardPct+'%':'✓ 对，开始拆解'+(boardCountdown?' '+boardCountdown:'')}}</text></button>
+  <button class="board-alt" data-verdict="partial" bindtap="boardVerdict">部分不对</button><button class="board-alt" data-verdict="wrong" bindtap="boardVerdict">完全不对</button></view>
+ <view wx:if="{{boardCountdown&&!boardVerdict}}" class="board-auto-hint">{{boardCountdown}} 秒后自动开始拆解 · 想先核对，点一下内容就会暂停</view>
+ </block>
+</view>
+
+<view wx:if="{{board.breakdown}}" bindlongpress="copyMenu" data-part="breakdown" id="board-breakdown" class="card board-breakdown {{!boardDetailOpen?'folded':''}}">
+ <view class="board-head"><view class="bd-title-wrap"><text class="bd-card-title">超级拆解结果</text><text class="bd-card-plan">{{board.breakdown.planName}}方案</text></view><view class="bd-head-actions"><text class="bd-head-link" catchtap="boardOpenPlans">方案</text><text class="bd-fold-pill" data-key="boardDetailOpen" catchtap="toggleFold">{{boardDetailOpen?'收起 ▴':'展开 ▾'}}</text></view></view>
+ <view class="board-insight-tags"><text wx:if="{{board.breakdown.insight.numbers.kind==='gallery'}}" class="board-insight-tag">图文</text><text wx:if="{{board.breakdown.insight.accountRole}}" class="board-insight-tag">{{board.breakdown.insight.accountRole}}</text><text wx:if="{{board.breakdown.insight.numbers.lowFollowerHit}}" class="board-insight-tag hot">低粉爆款</text><text wx:if="{{board.breakdown.insight.numbers.business}}" class="board-insight-tag">商家引流</text><text wx:for="{{board.breakdown.insight.numbers.drivers}}" wx:key="*this" class="board-insight-tag">{{item}}</text><text wx:if="{{board.breakdown.insight.numbers.tier}}" class="board-insight-tag muted-tag">{{board.breakdown.insight.numbers.tier}}</text></view>
+ <view wx:if="{{bd.data.has&&boardDetailOpen}}" class="bd-sec bd-data"><view class="bd-sec-head" data-key="data" catchtap="bdToggle"><text class="bd-sec-title">数据依据</text><text class="bd-sec-sum">{{bdOpen.data?'':bd.data.summary}}</text><text class="bd-more">{{bdOpen.data?'收起 ▴':'展开 ▾'}}</text></view>
+  <block wx:if="{{bdOpen.data}}"><view class="ev-title">我读到的信息<text class="ev-sub">用来核对 AI 有没有读对</text></view><view wx:for="{{bd.evidence.read}}" wx:key="k" class="ev-row"><text class="ev-k">{{item.k}}</text><text class="ev-v">{{item.v}}</text></view><view wx:if="{{bd.evidence.calc.length}}" class="ev-title">据此算出的指标<text class="ev-sub">下面的判断以这些为依据</text></view><view wx:for="{{bd.evidence.calc}}" wx:key="k" class="ev-row"><text class="ev-k">{{item.k}}</text><text class="ev-v {{item.k==='提醒'?'warn':''}}">{{item.v}}</text></view><block wx:for="{{bd.data.fields}}" wx:key="key"><template is="bdField" data="{{...item}}"/></block></block></view>
+ 
+ <view id="bd-conclusion" class="bd-sec bd-conclusion {{bdOpen.conclusion?'open':''}}"><view class="bd-sec-head" data-key="conclusion" catchtap="bdToggle"><text class="bd-num">1</text><text class="bd-sec-title">结论</text><text class="bd-sec-sum">{{bdOpen.conclusion?'':bd.positioning}}</text><text class="bd-more">{{bdOpen.conclusion?'收起 ▴':'展开 ▾'}}</text></view><block wx:if="{{bdOpen.conclusion}}"><view wx:if="{{bd.positioning}}" class="bd-lead">{{bd.positioning}}</view>
+  <view wx:if="{{board.breakdown.insight.why}}" class="bd-line"><text class="bd-k">为什么火</text>{{board.breakdown.insight.why}}</view>
+  <view wx:if="{{board.breakdown.insight.difficulty.score}}" class="bd-line"><text class="bd-k">复刻难度 {{board.breakdown.insight.difficulty.score}}/5</text>{{board.breakdown.insight.difficulty.reason}}</view>
+  <view wx:if="{{bd.best}}" class="bd-best"><text class="bd-k">最该学</text>{{bd.best.item}}<text wx:if="{{bd.best.how}}" class="muted">（{{bd.best.how}}）</text></view></block></view>
+ <block wx:if="{{boardDetailOpen}}">
+  <view wx:for="{{bdGroups}}" wx:for-item="g" wx:key="id" id="bd-{{g.id}}" class="bd-sec {{bdOpen[g.id]?'open':''}}"><view class="bd-sec-head" data-key="{{g.id}}" catchtap="bdToggle"><text class="bd-num">{{index+2}}</text><text class="bd-sec-title">{{g.title}}</text><text class="bd-sec-sum">{{bdOpen[g.id]?'':g.summary}}</text><text class="bd-more">{{bdOpen[g.id]?'收起 ▴':'展开 ▾'}}</text></view>
+   <block wx:if="{{bdOpen[g.id]}}"><block wx:if="{{g.id==='comments'}}"><view wx:if="{{board.breakdown.insight.commentPlay}}" class="bd-line"><text class="bd-k">打法</text>{{board.breakdown.insight.commentPlay}}</view><view wx:if="{{bdCommentNote}}" class="bd-cmt-note">{{bdCommentNote}}</view><view wx:for="{{board.breakdown.insight.topComments}}" wx:key="index" wx:if="{{index<3||bdOpen.commentsMore}}" class="bd-quote {{item.kind==='长尾'?'tail':''}}"><text wx:if="{{item.kind}}" class="bd-cmt-tag {{item.kind==='讨论'?'talk':item.kind==='共识'?'agree':''}}">{{item.kind}}</text>“{{item.text}}” <text class="muted">赞 {{item.likes}} · 回复 {{item.replies}}{{item.share!==undefined?' · 占热度 '+item.sharePct+'%':''}}{{item.isAuthorReply?' · 作者回复':''}}</text></view><view wx:if="{{board.breakdown.insight.topComments.length>3}}" class="bd-cmt-more" data-key="commentsMore" bindtap="bdToggle">{{bdOpen.commentsMore?'收起':'展开其余 '+(board.breakdown.insight.topComments.length-3)+' 条'}}</view></block>
+   <block wx:else><block wx:for="{{g.fields}}" wx:key="key"><template is="bdField" data="{{...item}}"/></block></block></block></view>
+ <view class="board-inline"><input class="board-input" value="{{boardAdjust}}" placeholder="想怎么调整拆法？例如：多看台词节奏" bindinput="boardAdjustInput"/></view>
+ <view class="board-actions"><button size="mini" data-save="0" bindtap="boardAdjustSend" disabled="{{boardBusy||!boardAdjust}}">仅本次</button><button size="mini" data-save="1" bindtap="boardAdjustSend" disabled="{{boardBusy||!boardAdjust}}">存到方案</button></view>
+ </block>
+ <view wx:if="{{boardRefVideo&&!((board.outputs.text&&boardRoute==='text')||(board.outputs.package&&boardRoute==='package'))}}" class="board-ref board-ref-route"><view class="muted">原视频（压缩版，仅供对照）</view><video class="board-ref-video" src="{{boardRefVideo}}" controls object-fit="contain" show-center-play-btn/></view>
+ <view wx:elif="{{boardRefLoading&&!((board.outputs.text&&boardRoute==='text')||(board.outputs.package&&boardRoute==='package'))}}" class="muted board-ref board-ref-route">正在准备原视频预览…</view>
+ <view class="strong board-route-title">接下来做什么</view>
+ <view class="board-routes"><button class="route-main" data-route="{{boardRecommend==='text'?'text':'package'}}" bindtap="boardOutput" disabled="{{boardBusy}}">{{boardRecommend==='text'?'文字作品':'创作包（照着拍）'}}（推荐）</button>
+  <view class="route-alts"><button class="route-alt" data-route="{{boardRecommend==='text'?'package':'text'}}" bindtap="boardOutput" disabled="{{boardBusy}}">{{boardRecommend==='text'?'创作包':'文字作品'}}</button><button class="route-alt" data-route="replica" bindtap="boardOutput">1:1 复刻</button><button class="route-alt" data-route="ai" bindtap="boardOutput">AI 生成</button></view></view>
+</view>
+
+<view wx:if="{{board.outputs.text&&boardRoute==='text'}}" id="board-output" class="card board-text-work" bindlongpress="copyMenu" data-part="text">
+ <view wx:if="{{boardRefVideo}}" class="board-ref"><view class="muted">原视频（压缩版，仅供对照）</view><video class="board-ref-video" src="{{boardRefVideo}}" controls object-fit="contain" show-center-play-btn/></view>
+ <view wx:elif="{{boardRefLoading}}" class="muted board-ref">正在准备原视频预览…</view>
+ <view class="board-text-head"><text class="strong">文字作品</text><view class="board-copy-bar"><text class="board-copy-btn" data-part="text" bindtap="copyAllPart">复制全部</text><text class="board-copy-btn" data-part="text" bindtap="copySelectPart">选择复制</text></view></view>
+ <view class="muted">灰色是原文，仅供对比，请勿直接发布；蓝框里的新文案可以直接点开修改，长按可选中复制。</view>
+ <view wx:if="{{board.outputs.text.tooClose}}" class="error-text">有 {{board.outputs.text.tooClose}} 句与原文太像，建议改写，避免被判搬运</view>
+ <view wx:if="{{board.outputs.text.screenTitles.length}}" class="board-titles"><view class="muted">全程大标题</view><view wx:for="{{board.outputs.text.screenTitles}}" wx:key="index" class="board-compare"><view class="board-orig"><text class="muted">原</text> <text user-select>{{item.orig}}</text></view><view class="board-new {{item.tooClose?'warn':''}}"><text user-select>{{item.text}}</text></view></view></view>
+ <view wx:for="{{board.outputs.text.lines}}" wx:key="index" class="board-compare"><view class="board-orig"><text class="muted">{{board.outputs.text.kind==='gallery'?'图片文字':(item.start!==null?item.start+'–'+item.end+'秒':'')}} 原</text> <text user-select>{{item.orig||'（原片无对应文字）'}}</text></view>
+  <view class="board-new {{item.tooClose?'warn':''}}" catchlongpress="copyKeep"><textarea class="board-line-edit" value="{{item.text}}" data-index="{{index}}" bindinput="boardLineEdit" auto-height maxlength="80" disable-default-padding/></view></view>
+ <view wx:if="{{board.outputs.text.kind!=='gallery'}}" class="muted">原片语音：<text user-select>{{board.outputs.text.original.transcript||'无'}}</text></view>
+ <view wx:if="{{board.outputs.text.caption}}" class="board-titles"><view class="strong">发布正文</view><view class="board-compare"><view wx:if="{{board.outputs.text.captionOrig}}" class="board-orig"><text class="muted">原</text> <text user-select>{{board.outputs.text.captionOrig}}</text></view>
+  <view class="board-new {{board.outputs.text.captionTooClose?'warn':''}}" catchlongpress="copyKeep"><textarea class="board-line-edit" value="{{board.outputs.text.caption}}" bindinput="boardCaptionEdit" auto-height maxlength="500" disable-default-padding/></view></view></view>
+ <view class="strong">标题</view><view wx:for="{{board.outputs.text.titles}}" wx:key="*this" class="body"><text user-select>{{index+1}}. {{item}}</text></view>
+ <view class="body"><text user-select>封面大字：{{board.outputs.text.cover}}　话题：{{boardHashtagText}}</text></view>
+ <view wx:if="{{boardMethodText}}" class="muted">借鉴同类爆款方法：{{boardMethodText}}</view>
+ <view wx:if="{{boardPrediction}}" class="muted">预估表现：{{boardPrediction.level}}（{{boardPrediction.basis}}，可信度{{boardPrediction.confidence}}）</view>
+ <view class="board-actions"><button size="mini" bindtap="boardCopyText">复制文案去发布</button><button size="mini" bindtap="boardComposeOpen">套版成片（可选）</button><button size="mini" bindtap="boardVariantOpen">裂变 3 条</button><button size="mini" class="primary" bindtap="boardPublish">生成发布包并回传数据</button></view>
+ <view wx:if="{{boardCompose}}" id="board-compose" class="board-compose"><view class="strong">{{boardCompose.mode==='variants'?'裂变：同一段画面出 3 条不同文案':'套版成片'}}</view>
+  <view wx:if="{{boardCompose.mode==='variants'}}" class="muted">按上面的文字作品写 3 版开头不同的文案（口吻不变），依次合成 3 条视频，方便批量发布、看哪版数据好。只换文字的视频平台可能视为相似内容，建议分开时间发或配不同画面。</view>
+  <view class="muted">画面需求：按文字时间轴准备 1–6 段竖屏视频（相册或现拍），系统按顺序拼接、叠加文字，默认不带原片音乐，发布时在抖音选“同款音乐”。</view>
+  <view class="board-actions"><button size="mini" bindtap="boardComposeChoose" loading="{{boardCompose.uploading}}">选择画面（已选 {{boardCompose.clips.length}} 段）</button>
+   <text wx:for="{{['top','center','bottom']}}" wx:key="*this" class="board-chip {{boardCompose.position===item?'active':''}}" data-position="{{item}}" bindtap="boardComposePosition">{{item==='top'?'文字在上':item==='center'?'居中':'在下'}}</text></view>
+  <view wx:if="{{boardCompose.preview}}" class="board-preview"><video src="{{boardCompose.preview}}" class="board-preview-video" controls bindtimeupdate="boardPreviewTime"/><cover-view class="board-overlay {{boardCompose.position}}">{{boardCompose.current}}</cover-view></view>
+  <button wx:if="{{boardCompose.mode!=='variants'}}" class="primary" bindtap="boardComposeRun" disabled="{{!boardCompose.clips.length||boardCompose.job.status==='running'}}" loading="{{boardCompose.job.status==='running'}}">一键成片</button>
+  <button wx:else class="primary" bindtap="boardVariantRun" disabled="{{!boardCompose.clips.length||boardVariants.status==='running'||boardVariantBusy}}" loading="{{boardVariants.status==='running'||boardVariantBusy}}">生成 3 条变体</button>
+  <view wx:if="{{boardCompose.mode==='variants'&&boardVariants}}" class="board-variants"><view class="muted">{{boardVariants.message}}</view>
+   <view wx:for="{{boardVariants.items}}" wx:key="id" class="board-variant"><view class="strong">版本 {{index+1}}<text class="muted"> · {{item.status==='done'?'已完成':item.status==='running'?'合成中…':item.status==='failed'?(item.message||'失败'):'排队中'}}</text></view>
+    <view wx:if="{{item.angle}}" class="muted">钩子：{{item.angle}}</view>
+    <video wx:if="{{item.videoUrl}}" class="board-variant-video" src="{{item.videoUrl}}" controls object-fit="contain"/>
+    <view wx:if="{{item.title}}" class="body"><text user-select>标题：{{item.title}}</text></view>
+    <view wx:if="{{item.caption}}" class="body"><text user-select>正文：{{item.caption}}</text></view>
+    <view class="board-actions"><button size="mini" data-index="{{index}}" bindtap="boardVariantCopy">复制文案</button><button wx:if="{{item.videoUrl}}" size="mini" data-index="{{index}}" bindtap="boardVariantSave">保存到相册</button></view></view></view>
+  <view wx:if="{{boardCompose.job}}" class="muted">{{boardCompose.job.message}}</view>
+  <block wx:if="{{boardCompose.job.videoUrl}}"><video class="result-video" src="{{boardCompose.job.videoUrl}}" controls/><button size="mini" bindtap="boardSaveComposed">保存到相册</button></block>
+ </view>
+</view>
+
+<view wx:if="{{board.outputs.package&&boardRoute==='package'}}" id="board-output" class="card board-package" bindlongpress="copyMenu" data-part="package">
+ <view wx:if="{{boardRefVideo}}" class="board-ref"><view class="muted">原视频（压缩版，仅供对照）</view><video class="board-ref-video" src="{{boardRefVideo}}" controls object-fit="contain" show-center-play-btn/></view>
+ <view wx:elif="{{boardRefLoading}}" class="muted board-ref">正在准备原视频预览…</view>
+ <view class="strong">创作包 · 照着拍</view>
+ <view wx:for="{{board.outputs.package.shots}}" wx:key="index" class="board-shot"><view class="strong">{{item.start!==null?item.start+'–'+item.end+'秒 · ':''}}{{item.shot}} · 难度{{item.difficulty}}</view>
+  <view>手机：{{item.phone}}</view><view>动作：{{item.action}}</view><view wx:if="{{item.line}}" class="{{item.tooClose?'warn':''}}">台词：{{item.line}}</view><view wx:if="{{item.subtitle}}">字幕：{{item.subtitle}}</view><view wx:if="{{item.orig}}" class="muted">原句参考：{{item.orig}}</view><view wx:if="{{item.alternative}}" class="muted">做不到：{{item.alternative}}</view></view>
+ <view wx:if="{{board.outputs.package.rhythm.bpm}}" class="muted">节奏：约 {{board.outputs.package.rhythm.bpm}} BPM（估计）{{board.outputs.package.rhythm.note}}</view>
+ <view class="strong">准备清单</view><view wx:for="{{board.outputs.package.checklist}}" wx:key="*this" class="body">☐ {{item}}</view>
+  <view wx:if="{{board.outputs.package.pinnedComment}}" class="body">置顶评论建议：{{board.outputs.package.pinnedComment}}</view>
+  <view wx:for="{{board.outputs.package.replySuggestions}}" wx:key="index" class="body">回复话术：{{item}}</view>
+ <view wx:if="{{boardMethodPkg}}" class="muted">借鉴同类爆款方法：{{boardMethodPkg}}</view>
+ <view wx:if="{{boardPrediction}}" class="muted">预估表现：{{boardPrediction.level}}（{{boardPrediction.basis}}）</view>
+ <view class="board-actions"><button size="mini" bindtap="boardTeleprompter">口播稿进提词器</button><button size="mini" class="primary" bindtap="boardPublish">生成发布包并回传数据</button></view>
+</view>
+<view wx:if="{{boardError}}" class="error-text">{{boardError}}</view>
+<view wx:if="{{copySheet}}" class="copy-mask" bindtap="copyClose" catchtouchmove="copyNoop"><view class="copy-panel" catchtap="copyNoop"><view class="copy-head"><text class="strong">{{copySheet.title}}</text><text class="muted">长按文字可选择部分复制</text></view><scroll-view scroll-y class="copy-scroll"><text user-select="{{true}}" class="copy-text">{{copySheet.text}}</text></scroll-view><view class="copy-actions"><button class="copy-btn main" bindtap="copyAllNow">复制全部</button><button class="copy-btn" bindtap="copyClose">关闭</button></view></view></view>
+<view wx:if="{{replicaChoice}}" class="copy-mask" bindtap="replicaChoiceClose" catchtouchmove="copyNoop"><view class="copy-panel replica-panel" catchtap="copyNoop"><view class="replica-x" bindtap="replicaChoiceClose">×</view><view class="replica-title">选择 1:1 复刻？</view><view class="replica-text">超级拆解会按顺序拆出爆点、结构和可学的做法，再生成你的文字作品或创作包。</view><view class="replica-text">1:1 复刻会按原视频逐镜头直接生成新视频，需要使用你自己的视频模型 Key，生成费用由你的账号承担；下一步进入配置页面。</view><view class="copy-actions"><button class="copy-btn" bindtap="replicaChoiceClose">继续超级拆解</button><button class="copy-btn main" bindtap="replicaGo">进入 1:1 复刻</button></view></view></view>
+
+<view wx:if="{{quotaSheet}}" class="copy-mask" catchtap="quotaApplyClose"><view class="quota-sheet" catchtap="copyKeep">
+ <view class="quota-sheet-head"><text class="strong">申请增加额度</text><text class="copy-x" catchtap="quotaApplyClose">×</text></view>
+ <view class="quota-free">调试阶段暂时免费，提交后立即到账。</view>
+ <view class="muted">1 次 = AI 多看 1 条新视频，不过期。</view>
+ <view class="board-chips"><text wx:for="{{[1,5,10]}}" wx:key="*this" class="board-chip {{quotaSheet.amount===item?'active':''}}" data-amount="{{item}}" catchtap="quotaAmount">+{{item}} 次</text></view>
+ <textarea class="board-text" placeholder="用途（选填），例如：做账号需要批量拆对标" maxlength="120" bindinput="quotaReason" value="{{quotaSheet.reason}}"/>
+ <button class="primary" catchtap="quotaApplySend" loading="{{quotaSheet.busy}}" disabled="{{quotaSheet.busy}}">提交申请</button>
+</view></view>

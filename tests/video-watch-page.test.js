@@ -1,0 +1,13 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),methods=require('../utils/watch-page');
+function setup(){const calls=[];const p={...methods,data:{reference:{asset:{sha256:'sha'},analysis:{analyzerVersion:'content-watch-4',understanding:{overview:'舞蹈'}}},watchTurns:[],watchTurn:0,watchMaxTurns:4,answers:{}},setData(v){Object.assign(this.data,v);},interview(){this.data.stage='interview';},summarize(){},async request(path,method,data){calls.push({path,data});if(path==='/reference/chat')return {reply:'我看到固定机位的舞蹈',turn:1,maxTurns:4,directions:['做海报'],brief:{output:'image',goal:'海报',keep:['动作'],change:[],notes:''},userCorrections:['没有口播']};return {brief:{output:'image',goal:'海报',keep:['动作'],change:[],notes:''},briefId:'brief-id',userCorrections:[]};}};return {p,calls};}
+test('watch chat confirms selected output without creating any work and caps turns',async()=>{
+ const {p,calls}=setup();await p.startWatchChat();assert.equal(p.data.watchTurns.length,1);assert.equal(p.data.watchBrief.output,'image');await p.confirmWatchBrief();assert.equal(p.data.briefId,'brief-id');assert.equal(p.data.outputType,'image');assert.equal(p.data.stage,'interview');assert.ok(calls.every(c=>!['/jobs','/works/image','/works/text'].includes(c.path)));
+ p.data.watchTurn=4;await p.sendWatchChat();assert.match(p.data.error,/上限/);
+});
+test('degraded chat preserves manual brief and JSON rendering handles legacy and new records',async()=>{
+ const {p}=setup();p.request=async()=>{throw Error('今日额度已用完');};await p.startWatchChat();assert.equal(p.data.watchBrief.goal,'舞蹈');assert.match(p.data.error,/额度/);p.watchBriefField({currentTarget:{dataset:{key:'keep'}},detail:{value:'动作\n机位'}});assert.deepEqual(p.data.watchBrief.keep,['动作','机位']);
+ const xml=fs.readFileSync('pages/video/index.wxml','utf8');for(const text of ['content-watch-4','understanding.timeline','就这样做','再仔细看一遍','userCorrections'])if(text!=='userCorrections')assert.ok(xml.includes(text),text);
+ const js=fs.readFileSync('pages/video/index.js','utf8');new vm.Script(js);assert.match(js,/briefId:this.data.briefId/);
+ const html=fs.readFileSync('scripts/admin-console.html','utf8');new vm.Script(html.match(/<script>([\s\S]*?)<\/script>/)[1]);for(const text of ['videoUnderstanding','dailyBudgetYuan','sevenDays','video_watch_deep','video_chat'])assert.ok(html.includes(text),text);
+ assert.ok(html.includes("const prices=node('label','模型单价JSON"));assert.ok(html.includes('draft.prices=JSON.parse(pricesInput.value)'));assert.ok(html.includes('单价 JSON 格式无效，请修正后再发布'));assert.ok(!html.includes("v=>{draft.prices=JSON.parse(v)}"));
+});

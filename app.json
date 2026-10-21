@@ -1,0 +1,64 @@
+{
+  "pages": [
+    "pages/main/index",
+    "pages/video/index",
+    "pages/analysis-records/index",
+    "pages/video-assets/index",
+    "pages/hotspots/index",
+    "pages/admin/index",
+    "pages/settings/index",
+    "pages/preferences/index",
+    "pages/ai/index",
+    "pages/tool-interfaces/index",
+    "pages/creation-tool/index",
+    "pages/replica/index",
+    "pages/board-work/index",
+    "pages/board-plans/index",
+    "pages/idea-box/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "有AI",
+    "navigationBarBackgroundColor": "#edf3fa",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#edf3fa",
+    "navigationStyle": "custom"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "subpackages": [
+    {
+      "root": "case-study",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "study-201",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "study-202",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "study-203",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "study-204",
+      "pages": [
+        "index"
+      ]
+    }
+  ],
+  "usingComponents": {
+    "app-navigation": "/components/app-navigation/index"
+  },
+  "lazyCodeLoading": "requiredComponents"
+}

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="YOUAI 创作者工作台网页版设计原型">
+  <title>YOUAI 创作者工作台</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell" data-mode="prototype">
+    <aside class="rail" aria-label="主导航">
+      <a class="brand" href="#inspiration" aria-label="YOUAI 首页"><span>YOUAI</span><i></i></a>
+      <nav class="primary-nav">
+        <button class="nav-item is-active" data-view="inspiration"><img src="../assets/icons/inspiration-selected.svg" alt=""><span>灵感</span></button>
+        <button class="nav-item" data-view="creation"><img src="../assets/icons/create-selected.svg" alt=""><span>创作</span></button>
+        <button class="nav-item" data-view="learning"><img src="../assets/icons/learn-selected.svg" alt=""><span>学习</span></button>
+        <button class="nav-item" data-view="account"><img src="../assets/icons/profile-selected.svg" alt=""><span>我的</span></button>
+      </nav>
+      <div class="rail-status"><span class="status-dot"></span><span>原型数据</span><small>中台接入后跨端同步</small></div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div><p id="page-kicker">今天先留下一个真实观察</p><h1 id="page-title">灵感</h1></div>
+        <div class="top-actions"><button class="quiet" data-action="search" aria-label="搜索">搜索</button><button class="avatar" data-view="account" aria-label="打开我的">有</button></div>
+      </header>
+
+      <section class="page is-active" data-page="inspiration">
+        <div class="idea-ribbon">
+          <div class="ribbon-copy"><span>随手记</span><h2>把刚刚那一下，留住。</h2><p>一句观察、一个画面或一个问题，都可以成为下一条作品。</p></div>
+          <form id="idea-form" class="idea-form">
+            <label for="idea-input">此刻，你想到了什么？</label>
+            <textarea id="idea-input" maxlength="1000" placeholder="例如：下班后的便利店灯光，让普通的一天突然有了电影感。"></textarea>
+            <div class="idea-actions"><span id="idea-count">0 / 1000</span><button type="submit" class="primary">记下来</button></div>
+          </form>
+        </div>
+
+        <div class="content-grid inspiration-grid">
+          <section class="record-board" aria-labelledby="record-title">
+            <div class="section-head"><div><h2 id="record-title">我的记录</h2><p>从想法回到作品，也能从作品回到最初的念头。</p></div><div class="segmented" aria-label="记录筛选"><button class="is-active" data-record="all">全部</button><button data-record="idea">点子</button><button data-record="work">作品</button><button data-record="favorite">收藏</button></div></div>
+            <div id="record-list" class="record-list">
+              <article class="record-row" data-record-type="idea"><div class="record-mark idea-mark"></div><div><span>灵感记录 · 今天</span><h3>用三个生活细节，拍出下班后的松弛感</h3></div><button data-action="create">开始创作</button></article>
+              <article class="record-row" data-record-type="work"><div class="record-mark work-mark"></div><div><span>创作方案 · 草稿</span><h3>雨天城市：声音先于画面出现</h3></div><button data-action="open">继续编辑</button></article>
+              <article class="record-row" data-record-type="favorite"><div class="record-mark learn-mark"></div><div><span>收藏案例 · 情绪种草</span><h3>让固定画面承载留香想象</h3></div><button data-action="study">查看拆解</button></article>
+            </div>
+          </section>
+
+          <aside class="trend-board" aria-labelledby="trend-title">
+            <div class="section-head compact"><div><h2 id="trend-title">热点参考</h2><p>带着自己的主题看热点。</p></div><button class="text-button" data-action="refresh">换一组</button></div>
+            <ol class="trend-list">
+              <li><span>01</span><div><b>周末城市散步</b><small>从路线变成一段情绪</small></div><button data-action="create">使用</button></li>
+              <li><span>02</span><div><b>早餐的五分钟</b><small>具体动作比精致摆盘更可信</small></div><button data-action="create">使用</button></li>
+              <li><span>03</span><div><b>旧物的新用途</b><small>过程、证据和结果都有画面</small></div><button data-action="create">使用</button></li>
+            </ol>
+          </aside>
+        </div>
+      </section>
+
+      <section class="page" data-page="creation">
+        <div class="page-intro"><div><h2>从哪里开始？</h2><p>从一句话、一个方法或一段已有素材进入同一个创作项目。</p></div><button class="primary" data-action="new-project">新建创作项目</button></div>
+        <div class="start-lanes">
+          <button data-action="new-project"><span>从一个主题</span><b>直接写下你想表达的事</b></button>
+          <button data-action="study"><span>从学习案例</span><b>复用结构，不复制内容</b></button>
+          <button data-action="open"><span>从已有素材</span><b>提取文案、音频或封面</b></button>
+        </div>
+        <section class="tool-section">
+          <div class="section-head"><div><h2>创作工具</h2><p>结果将保存到当前创作项目。</p></div></div>
+          <div class="tool-strip">
+            <button data-tool="download"><img src="../assets/icons/download-selected.svg" alt=""><span>视频下载</span></button>
+            <button data-tool="transcript"><img src="../assets/icons/transcript-selected.svg" alt=""><span>文案提取</span></button>
+            <button data-tool="audio"><img src="../assets/icons/audio-selected.svg" alt=""><span>音频提取</span></button>
+            <button data-tool="eraser"><img src="../assets/icons/eraser-selected.svg" alt=""><span>去水印</span></button>
+            <button data-tool="cover"><img src="../assets/icons/cover-selected.svg" alt=""><span>封面提取</span></button>
+            <button data-tool="teleprompter"><img src="../assets/icons/teleprompter-selected.svg" alt=""><span>提词器</span></button>
+          </div>
+        </section>
+        <section class="project-list"><div class="section-head"><div><h2>最近创作</h2><p>草稿、版本和工具产物都归在项目中。</p></div><button class="text-button">查看全部</button></div><div class="project-row"><div><span class="project-state">草稿</span><h3>雨天城市：声音先于画面出现</h3><p>昨天更新 · 2 个版本</p></div><button data-action="open">继续编辑</button></div><div class="empty-line">完成第一条真实创作后，项目会在各端保持一致。</div></section>
+      </section>
+
+      <section class="page" data-page="learning">
+        <div class="learning-feature"><div class="feature-cover"><span>每日一拆</span><strong>香气<br>如何被看见</strong><small>情绪种草 · 21 秒</small></div><div class="feature-copy"><span class="pill">今天推荐</span><h2>让固定画面承载留香想象</h2><p>区分画面证据、原片主张与可复用方法，再把练习直接带入自己的主题。</p><div class="feature-actions"><button class="primary" data-action="study">查看完整拆解</button><button class="quiet" data-action="favorite">收藏</button></div></div></div>
+        <div class="filter-line"><button class="is-active">全部</button><button>人物讲解</button><button>情绪种草</button><button>演示证据</button><button>资讯清单</button></div>
+        <div class="case-grid">
+          <article class="case-row"><div class="case-swatch coffee">清单</div><div><span>资讯清单</span><h3>用数量承诺降低信息筛选成本</h3><p>每项只讲一个具体用途，并补充真实验证。</p></div><button data-action="study">打开</button></article>
+          <article class="case-row"><div class="case-swatch green">动作</div><div><span>人物展示</span><h3>用统一造型形成视觉记忆</h3><p>一个明确符号配合一个可识别动作。</p></div><button data-action="study">打开</button></article>
+          <article class="case-row"><div class="case-swatch blue">过程</div><div><span>演示证据</span><h3>让步骤和结果出现在同一条叙事里</h3><p>把主张换成观众可以看到的过程。</p></div><button data-action="study">打开</button></article>
+        </div>
+      </section>
+
+      <section class="page" data-page="account">
+        <div class="profile-line"><div class="profile-avatar">有</div><div><h2>小有同学</h2><p>我的创作 · 生活</p></div><button class="quiet">编辑资料</button></div>
+        <div class="week-line"><span>本周完成</span><strong>1 / 3</strong><div><i style="width:33%"></i></div><button class="text-button">调整目标</button></div>
+        <div class="account-columns">
+          <section><div class="section-head compact"><div><h2>内容管理</h2><p>管理自己产生和收藏的内容。</p></div></div><div class="setting-list"><button data-view="creation"><span>作品与草稿</span><i>1</i></button><button data-view="inspiration"><span>灵感记录</span><i>3</i></button><button data-view="learning"><span>收藏与学习笔记</span><i>2</i></button><button><span>工具产物</span><i>0</i></button></div></section>
+          <section><div class="section-head compact"><div><h2>创作设置</h2><p>这些默认值可以在单次创作中覆盖。</p></div></div><div class="setting-list"><button><span>创作档案</span><small>我的创作</small></button><button><span>AI 模型与技能</span><small>默认模型</small></button><button><span>工具接口</span><small>公共接口</small></button><button><span>拆解方案</span><small>自动选择</small></button></div></section>
+          <section><div class="section-head compact"><div><h2>数据与账户</h2><p>登录后可在多个设备继续。</p></div></div><div class="setting-list"><button><span>同步状态</span><small>等待接入</small></button><button><span>本机数据迁移</span></button><button><span>隐私与授权</span></button><button><span>关于 YOUAI</span></button></div></section>
+        </div>
+      </section>
+    </main>
+
+    <aside class="context-panel" aria-label="今日概览">
+      <div class="context-date"><span>今天</span><strong id="today-label">10 月 10 日</strong></div>
+      <section><h2>继续创作</h2><button class="continue-card" data-view="creation"><span>草稿</span><b>雨天城市</b><small>停在脚本第二段</small></button></section>
+      <section><h2>本周节奏</h2><div class="week-dots" aria-label="本周完成一天"><i class="done"></i><i></i><i></i><i></i><i></i><i></i><i></i></div><p>已经完成 1 份方案，还差 2 份。</p></section>
+      <section class="sync-note"><span class="status-dot"></span><div><b>当前为网页原型</b><p>接入数据中台后显示真实同步状态。</p></div></section>
+    </aside>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./app.js"></script>
+</body>
+</html>

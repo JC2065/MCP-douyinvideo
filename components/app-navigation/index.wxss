@@ -1,0 +1,44 @@
+.navigation{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(237,243,250,.96);border-bottom:1rpx solid rgba(255,255,255,.85);backdrop-filter:blur(20px)}.navigation-row{display:flex;align-items:center;padding-left:8px;box-sizing:border-box;gap:8px}.back-button{flex:0 0 88px;max-width:88px;display:flex;align-items:center;justify-content:center;gap:3px;width:88px;min-width:88px;height:48px;margin:0;padding:0 12px;background:rgba(255,255,255,.75);border-radius:24px;color:#0864cf;font-size:15px;font-weight:600;line-height:1;box-sizing:border-box;border:1px solid rgba(255,255,255,.95)}.back-button::after{border:0}.back-button image{width:22px;height:22px}.back-pressed{background:#d8e9ff;transform:scale(.96)}.navigation-title{min-width:0;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:15px;font-weight:600;color:#23344f;text-align:center}
+.float-zone{position:fixed;left:0;z-index:150;pointer-events:none}
+.float-ball{width:60px;height:60px;pointer-events:auto}
+.ball-inner{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.78);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.95);box-shadow:0 4px 16px rgba(7,93,204,.18);box-sizing:border-box;opacity:.88;transition:transform 150ms,opacity 150ms,background 150ms}
+.ball-inner image{width:28px;height:28px}
+.ball-pressed{opacity:1;transform:scale(.9);background:#d8e9ff}
+.queue-spin{width:11px;height:11px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;box-sizing:border-box;animation:ball-spin 1s linear infinite}@keyframes ball-spin{to{transform:rotate(360deg)}}
+.task-mask{position:fixed;left:0;top:0;right:0;bottom:0;z-index:200;background:rgba(15,23,42,.4)}
+.task-sheet{position:fixed;left:0;right:0;bottom:0;z-index:201;background:#fff;border-radius:24px 24px 0 0;padding:10px 20px calc(20px + env(safe-area-inset-bottom));box-sizing:border-box;min-height:46vh;max-height:80vh;overflow-y:auto;box-shadow:0 -8px 30px rgba(15,23,42,.12)}
+.task-grip{width:40px;height:5px;border-radius:3px;background:#dbe3ee;margin:0 auto 14px}
+.task-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:8px}.task-title{font-size:20px;font-weight:700;color:#1d2b44}.task-sub{font-size:13px;color:#64748b;margin-top:4px}.task-link{font-size:14px;color:#0864cf;padding:6px 0}
+.task-row{display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid #eef2f7}
+.task-dot{flex:0 0 36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#075dcc;color:#fff;font-size:16px;font-weight:700}.task-dot .queue-spin{width:16px;height:16px}.task-dot.done{background:#16a34a}.task-dot.failed{background:#dc2626}
+.task-main{flex:1;min-width:0}.task-name{font-size:16px;font-weight:600;color:#1d2b44;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.task-state{font-size:13px;color:#64748b;margin-top:5px}.task-state.done{color:#15803d}.task-state.failed{color:#b91c1c}
+.task-side{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px}.task-go{font-size:14px;font-weight:600;color:#0864cf}.task-remove{font-size:12px;color:#94a3b8;padding:2px 0 2px 8px}
+.task-close{margin:18px 0 0;height:46px;line-height:46px;border-radius:23px;background:#eef4fc;color:#0864cf;font-size:15px;font-weight:600}.task-close::after{border:0}
+.float-ball{position:relative}.ball-tasks{font-size:14px;font-weight:700;color:#0864cf}
+.ball-badge{position:absolute;right:-3px;top:-3px;min-width:22px;height:22px;padding:0 5px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:#075dcc;color:#fff;font-size:12px;font-weight:700;box-sizing:border-box;box-shadow:0 2px 6px rgba(7,93,204,.35);pointer-events:none}.ball-badge.ready{background:#16a34a;box-shadow:0 2px 6px rgba(22,163,74,.35)}.ball-badge .queue-spin{width:11px;height:11px}
+.ball-hint{position:absolute;left:68px;top:14px;white-space:nowrap;padding:7px 12px;border-radius:16px;background:rgba(29,43,68,.92);color:#fff;font-size:13px;pointer-events:none;box-shadow:0 4px 12px rgba(15,23,42,.2)}.ball-hint.on-left{left:auto;right:68px}
+.task-row.seen .task-dot{background:#cbd5e1}.task-row.seen .task-name{color:#64748b;font-weight:500}.task-row.seen .task-state{color:#94a3b8}
+/* 标题按整行居中（不受左侧返回键和右侧胶囊宽度影响） */
+.navigation-row{position:relative}
+.navigation-title{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);flex:none;pointer-events:none}
+.rot-title{display:flex;align-items:center;justify-content:center;gap:6px;overflow:visible}
+.rot-box{height:22px;overflow:hidden;display:flex;align-items:center}
+.rot-prefix{display:block;color:#075dcc;font-weight:700;line-height:22px}
+.rot-a{animation:rotA .45s ease}.rot-b{animation:rotB .45s ease}
+@keyframes rotA{from{transform:translateY(100%);opacity:0}to{transform:none;opacity:1}}
+@keyframes rotB{from{transform:translateY(100%);opacity:0}to{transform:none;opacity:1}}
+.rot-suffix{font-weight:700}
+/* 标题绝对居中后，返回键固定在左侧，不随 flex/按钮默认样式移到中间 */
+.navigation-row{justify-content:flex-start}
+.navigation-row .back-button{position:absolute;left:8px;top:50%;transform:translateY(-50%);margin:0 !important;z-index:1}
+.navigation-row .back-button.back-pressed{transform:translateY(-50%) scale(.96)}
+/* 任务面板：「继续」做成大号胶囊按钮，「移除」放左边小灰字并拉开距离，避免误点 */
+.task-side{flex-direction:row;align-items:center;gap:22px}
+.task-go{order:2;display:flex;align-items:center;justify-content:center;min-width:76px;height:36px;padding:0 16px;border-radius:18px;background:#075dcc;color:#fff;font-size:15px;font-weight:600;box-sizing:border-box;box-shadow:0 3px 10px rgba(7,93,204,.25)}
+.task-row.seen .task-go{background:#e8f0fc;color:#0864cf;box-shadow:none}
+.task-remove{order:1;padding:10px 4px;font-size:12px;color:#94a3b8}
+/* 移除放到状态行最前面，右侧只留「继续/查看」，标题能显示更长 */
+.task-meta{display:flex;align-items:center;gap:10px;margin-top:5px;min-width:0}
+.task-meta .task-remove{order:0;flex-shrink:0;padding:2px 10px;border-radius:10px;background:#f1f5f9;font-size:12px;color:#94a3b8;line-height:18px}
+.task-meta .task-state{margin-top:0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task-side{gap:0}

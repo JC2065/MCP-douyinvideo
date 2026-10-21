@@ -1,0 +1,47 @@
+{
+  "description": "YOUAI 交互演示",
+  "miniprogramRoot": "./",
+  "compileType": "miniprogram",
+  "appid": "wx8ae5d4f3ea8d0d8b",
+  "projectname": "YOUAI-demo",
+  "setting": {
+    "urlCheck": true,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [
+      { "type": "folder", "value": "tools" },
+      { "type": "folder", "value": "dist" },
+      { "type": "folder", "value": "tests" },
+      { "type": "folder", "value": "docs" },
+      { "type": "folder", "value": "backend" },
+      { "type": "folder", "value": "web" },
+      { "type": "folder", "value": "scripts" },
+      { "type": "folder", "value": "deploy" },
+      { "type": "file", "value": "compose.cloud.yml" },
+      { "type": "file", "value": "compose.video-cloud.yml" }
+    ],
+    "include": []
+  },
+  "editorSetting": {}
+}

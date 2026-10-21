@@ -1,0 +1,24 @@
+<app-navigation class="app-navigation" title="{{name}}"/>
+<view class="shell creation-tool">
+ <view class="heading">{{name}}</view><view class="sub">{{hint}}</view>
+ <block wx:if="{{tool!=='teleprompter'}}">
+  <view class="card"><textarea class="source-input" value="{{url}}" data-field="url" bindinput="input" placeholder="粘贴抖音分享文本或链接" maxlength="1000"/><button class="primary" bindtap="run" loading="{{running}}" disabled="{{running}}">{{running?'处理中…':'开始'+name}}</button></view>
+  <view wx:if="{{running}}" class="card progress"><view class="spinner"></view><view><view class="strong">{{stage}}</view><view class="muted">已等待 {{elapsed}} 秒，请留在本页</view></view></view>
+  <view wx:if="{{error}}" class="card error">{{error}}</view>
+  <view wx:if="{{result}}" class="card result"><view class="strong">{{result.message}}</view><view class="muted">{{result.title}} · {{result.media.durationSeconds||'?'}} 秒{{result.sourceReused?' · 已复用原片':''}}</view>
+   <video wx:if="{{result.kind==='video'}}" class="preview-video" src="{{result.assetUrl}}" controls/>
+   <image wx:if="{{result.kind==='image'}}" class="preview-image" src="{{result.assetUrl}}" mode="widthFix"/>
+   <view wx:if="{{result.kind==='audio'}}" class="preview-audio"><button class="secondary" bindtap="toggleAudio" loading="{{audioBusy}}" disabled="{{audioBusy}}">{{audioPlaying?'暂停音频':'播放音频'}}</button><view class="muted">{{audioTime}} / {{audioDuration==='00:00'?result.media.durationSeconds+' 秒':audioDuration}}</view></view>
+   <view wx:if="{{result.kind==='text'}}" class="transcript">{{result.transcript.text||'没有识别到清晰人声'}}</view>
+   <view class="row actions"><button wx:if="{{result.kind==='text'}}" class="primary" bindtap="copyText">复制文案</button><button wx:else class="primary" bindtap="saveAsset">{{result.kind==='audio'?'导出 MP3':'保存到相册'}}</button></view>
+   <view wx:if="{{result.kind==='audio'}}" class="muted">导出到微信聊天后，可打开 MP3 保存到手机文件。</view>
+   <view wx:if="{{tool==='eraser'}}" class="limit">当前输出平台解析获得的无水印原片，不会模糊裁切或涂抹画面；无法取得无水印源时会明确失败。</view>
+  </view>
+ </block>
+ <block wx:else>
+  <textarea class="card script-editor" value="{{script}}" bindinput="scriptInput" placeholder="粘贴或输入口播文案" maxlength="10000"/>
+  <view class="card prompt-settings"><view>速度 {{speed}}</view><slider min="10" max="80" value="{{speed}}" bindchange="speed" activeColor="#075dcc"/><view>字号 {{fontSize}}</view><slider min="24" max="64" value="{{fontSize}}" bindchange="font" activeColor="#075dcc"/><view class="row"><button class="secondary" bindtap="mirror">{{mirrored?'取消镜像':'镜像'}}</button><button class="secondary" bindtap="resetPrompt">回到开头</button></view></view>
+  <scroll-view class="prompter {{mirrored?'mirrored':''}}" scroll-y scroll-top="{{scrollTop}}" scroll-with-animation><view class="prompter-space"></view><view style="font-size:{{fontSize}}px">{{script||'提词内容会显示在这里'}}</view><view class="prompter-space"></view></scroll-view>
+  <button class="primary prompt-play" bindtap="togglePlay">{{playing?'暂停':'开始滚动'}}</button>
+ </block>
+</view>

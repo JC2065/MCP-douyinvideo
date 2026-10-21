@@ -1,0 +1,40 @@
+name: youai-cloud
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: youai
+      POSTGRES_USER: youai
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set production database password}
+    command: ["postgres", "-c", "ssl=on", "-c", "ssl_cert_file=/tls/server.crt", "-c", "ssl_key_file=/tls/server.key"]
+    volumes:
+      - youai-postgres:/var/lib/postgresql/data
+      - ./tls:/tls:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U youai -d youai"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  api:
+    image: codexyouai-api:${API_TAG:?Set release tag}
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      HOST: 0.0.0.0
+      PORT: 8080
+      DATABASE_URL: postgres://youai:${DB_PASSWORD:?Set production database password}@postgres:5432/youai
+      DATABASE_SSL_MODE: verify-full
+      DATABASE_CA: ${DATABASE_CA:?Set database CA}
+      DATABASE_POOL_MAX: 3
+    ports: ["127.0.0.1:8080:8080"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/health/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+volumes:
+  youai-postgres:

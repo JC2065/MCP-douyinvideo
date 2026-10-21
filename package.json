@@ -1,0 +1,16 @@
+{
+  "name": "youai-miniprogram-demo",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:devtools": "node scripts/devtools-smoke.cjs",
+    "backend:start": "node backend/server.js",
+    "backend:migrate": "node backend/migrate.js up",
+    "backend:migrate:status": "node backend/migrate.js status"
+  },
+  "dependencies": {
+    "pg": "8.23.1"
+  }
+}

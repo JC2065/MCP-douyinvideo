@@ -1,0 +1,28 @@
+<app-navigation class="app-navigation" title="碎片箱"/>
+<view class="idea-box">
+ <view wx:if="{{!loggedIn}}" class="idea-empty">登录后，碎片会同步到云端，TA 也能帮你把它们变成选题。<button class="idea-primary" bindtap="login">返回登录</button></view>
+ <block wx:else>
+  <view class="idea-tabs">
+   <text class="idea-tab {{filter==='new'?'on':''}}" data-filter="new" bindtap="pick">未用 {{counts.new}}</text>
+   <text class="idea-tab {{filter==='used'?'on':''}}" data-filter="used" bindtap="pick">已用 {{counts.used}}</text>
+   <text class="idea-tab {{filter==='all'?'on':''}}" data-filter="all" bindtap="pick">全部</text>
+  </view>
+  <view class="idea-hint">TA 会翻出这里还没用过的碎片，结合热点给你出选题。</view>
+  <view wx:if="{{error}}" class="idea-error">{{error}}</view>
+  <view wx:if="{{!loading&&!rows.length&&!error}}" class="idea-empty">还没有碎片。在首页“我想记”里打字、粘链接、截图或按住说话都能记。</view>
+  <view wx:for="{{rows}}" wx:key="id" class="idea-item">
+   <view class="idea-meta"><text class="idea-kind kind-{{item.kind}}">{{item.kindLabel}}</text><text>{{item.age}}</text><text wx:if="{{item.surfaced}}">· TA 提起过 {{item.surfaced}} 次</text><text wx:if="{{item.status==='used'}}" class="idea-used">已用</text></view>
+   <image wx:if="{{item.image}}" class="idea-image" src="{{item.image}}" mode="aspectFill" data-id="{{item.id}}" bindtap="preview"/>
+   <view class="idea-text {{open[item.id]?'is-open':''}}" data-id="{{item.id}}" bindtap="toggle">{{item.text}}</view>
+   <view wx:if="{{item.note}}" class="idea-note">{{item.note}}</view>
+   <view wx:if="{{item.tags.length}}" class="idea-tags"><text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">#{{tag}}</text></view>
+   <view class="idea-actions">
+    <button class="idea-primary" data-id="{{item.id}}" bindtap="chat">和 TA 聊这个</button>
+    <button wx:if="{{item.kind==='link'&&item.platform==='douyin'}}" data-id="{{item.id}}" bindtap="breakdown">拆这个链接</button>
+    <button wx:else data-id="{{item.id}}" bindtap="video">做成视频</button>
+    <button data-id="{{item.id}}" bindtap="mark">{{item.status==='new'?'标为已用':'放回未用'}}</button>
+    <button class="idea-danger" data-id="{{item.id}}" bindtap="remove">删除</button>
+   </view>
+  </view>
+ </block>
+</view>

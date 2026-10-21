@@ -1,0 +1,22 @@
+<app-navigation class="app-navigation" title="1:1 复刻"/>
+<view class="page replica">
+ <view class="card"><view class="strong">1:1 复刻 · 使用你自己的 Key</view><view class="muted">按原视频的动作、表情和口型，让你照片里的人 1:1 重演。调用 wan2.2-animate-move，费用由你的百炼 / 千问平台账户直接扣除（标准档约 ¥0.4/秒，参考视频最长取 30 秒）。有AI不保存你的 Key。</view>
+  <view wx:if="{{!sha}}" class="error-text">请先在“爆款拆解复刻”里粘贴并获取参考视频，再进入本页。</view>
+  <view wx:else class="muted">参考视频：{{seconds}} 秒</view></view>
+ <view class="card"><view class="strong">1. 你的 API Key</view>
+  <picker range="{{providers}}" range-key="name" bindchange="providerChange"><view class="field">平台：{{provider==='bailian'?'阿里云百炼':'千问AI平台'}} ▾</view></picker>
+  <input class="field key-input" password value="{{key}}" bindinput="keyInput" bindfocus="keyFocus" bindblur="keyBlur" maxlength="256" placeholder="{{keyFocused?'':'粘贴 sk- 开头的 API Key'}}" placeholder-class="key-ph"/>
+  <checkbox-group bindchange="rememberChange"><label><checkbox value="1" checked="{{remember}}"/>只在本机记住</label></checkbox-group>
+  <view class="row"><button size="mini" bindtap="checkKey" disabled="{{busy||!key}}">检测（不扣费）</button><button size="mini" bindtap="forgetKey">清除</button><button size="mini" bindtap="openGuide">去开通 / 充值</button></view>
+  <view wx:if="{{keyStatus}}" class="muted">{{keyStatus}}</view>
+  <view class="muted">没有 Key？在阿里云百炼控制台开通 wan2.2-animate-move、创建 API Key 并充值。</view></view>
+ <view class="card"><view class="strong">2. 人物照片</view><view class="muted">清晰的单人正面照，构图尽量和原视频一致（近景对近景、全身对全身）。</view>
+  <image wx:if="{{photoPath}}" class="photo" src="{{photoPath}}" mode="aspectFit"/><button size="mini" bindtap="choosePhoto">{{photoPath?'更换照片':'选择照片'}}</button></view>
+ <view class="card"><view class="strong">3. 生成质量</view><view class="row"><button size="mini" class="{{mode==='wan-std'?'primary':''}}" data-mode="wan-std" bindtap="modeChange">标准（约 ¥0.4/秒）</button><button size="mini" class="{{mode==='wan-pro'?'primary':''}}" data-mode="wan-pro" bindtap="modeChange">高质量（更流畅，更贵）</button></view></view>
+ <view class="card"><checkbox-group bindchange="consentChange"><label><checkbox value="1" checked="{{consent}}"/>我确认原视频为本人所有或已获授权，照片为本人或已获本人同意；成片带“AI 生成”标识。</label></checkbox-group></view>
+ <button class="primary" bindtap="submit" disabled="{{busy||!sha}}" loading="{{busy}}">生成 1:1 复刻</button>
+ <view wx:if="{{error}}" class="error-text">{{error}}</view>
+ <view wx:if="{{job}}" class="card"><view class="strong">{{job.status==='done'?'已完成':job.status==='failed'?'未完成':'生成中'}}</view><view class="muted">{{job.message}}<text wx:if="{{job.estimateYuan}}"> · 预计费用 ¥{{job.estimateYuan}}</text></view>
+  <video wx:if="{{videoUrl}}" class="result" src="{{videoUrl}}" controls/><button wx:if="{{videoUrl}}" bindtap="save" loading="{{saving}}">保存到相册</button></view>
+ <view wx:if="{{jobs.length}}" class="card"><view class="strong">我的复刻</view><view wx:for="{{jobs}}" wx:key="id" class="job-row" data-id="{{item.id}}" bindtap="openJob"><text>{{item.status==='done'?'✓ 已完成':item.status==='failed'?'× 未完成':'… 生成中'}}</text><text class="muted">{{item.seconds}} 秒 · {{item.mode==='wan-pro'?'高质量':'标准'}}</text></view></view>
+</view>

@@ -1,0 +1,41 @@
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const {execFileSync}=require('node:child_process');
+const path=require('node:path');
+const {loadConfig}=require('../backend/config');
+test('云端 Compose 实际解析为内部 TLS 数据库与回环 API',()=>{
+ const result=JSON.parse(execFileSync('docker',['compose','-f',path.join(__dirname,'../compose.cloud.yml'),'config','--format','json'],{encoding:'utf8',env:{...process.env,DB_PASSWORD:'test-only-random-password',API_TAG:'test-release',DATABASE_CA:'test-only-ca'}}));
+ const {postgres,api}=result.services;
+ assert.equal(postgres.ports,undefined);
+ assert.equal(api.ports[0].host_ip,'127.0.0.1');
+ assert.equal(api.environment.APP_ENV,'production');
+ assert.equal(api.environment.DATABASE_SSL_MODE,'verify-full');
+ assert.equal(api.environment.DATABASE_POOL_MAX,'3');
+ assert.ok(postgres.command.includes('ssl=on'));
+ assert.ok(postgres.volumes.some(v=>v.target==='/tls'&&v.read_only));
+ assert.ok(postgres.volumes.some(v=>v.type==='volume'&&v.target==='/var/lib/postgresql/data'));
+ assert.equal(api.image,'codexyouai-api:test-release');
+ assert.equal(api.depends_on.postgres.condition,'service_healthy');
+});
+test('生产启动拒绝缺少 CA 或关闭数据库验证',()=>{
+ const base={APP_ENV:'production',DATABASE_URL:'postgres://youai:test@postgres/youai',DATABASE_SSL_MODE:'verify-full'};
+ assert.throws(()=>loadConfig(base),/DATABASE_CA/);
+ assert.throws(()=>loadConfig({...base,DATABASE_SSL_MODE:'disable'}),/verify-full/);
+ const config=loadConfig({...base,DATABASE_CA:'test-only-ca',DATABASE_POOL_MAX:'3'});
+ assert.equal(config.databaseSsl.rejectUnauthorized,true);
+ assert.equal(config.databasePoolMax,3);
+});
+test('视频 Worker 使用持久目录且仅回环可访问',()=>{
+ const result=JSON.parse(execFileSync('docker',['compose','-f',path.join(__dirname,'../compose.video-cloud.yml'),'config','--format','json'],{encoding:'utf8',env:{...process.env,VIDEO_TAG:'test-release'}}));
+ const service=result.services.video;
+ assert.equal(service.ports[0].host_ip,'127.0.0.1');
+ assert.equal(service.environment.YOUAI_RENDER_ROOT,'/data/render');
+ assert.equal(service.environment.YOUAI_BACKEND_URL,'http://youai-cloud-api-1:8080');
+ assert.ok(service.volumes.some(v=>v.target==='/data'&&v.type==='bind'));
+ assert.ok(service.volumes.some(v=>v.target==='/credentials'&&v.read_only));
+ assert.equal(result.networks.internal.external,true);
+ assert.equal(service.environment.YOUAI_REFERENCE_PARSER_URL,'http://dtk-api-1:8000');
+ assert.equal(service.environment.YOUAI_REFERENCE_PARSER_INTERNAL_HTTP_HOSTS,'dtk-api-1');
+ assert.equal(result.networks.parser.name,'dtk_edge');
+ assert.equal(result.networks.parser.external,true);
+});

@@ -1,0 +1,45 @@
+// 悬浮球：点击返回，长按打开后台任务面板；有任务时球角显示进度角标。首页没有返回时球显示「任务」，点击即打开。
+// 新用户提示「长按查看后台任务」：有任务时最多每 24 小时一次，共 3 次。
+const HINT_KEY='youai-ball-hint',HINT_TIMES=3,HINT_GAP=86400000;
+// 开发者工具用整个模拟器晃动来模拟震动；只在真机震动，页面本身不做任何动画。
+const devtools=()=>{try{return (wx.getDeviceInfo?wx.getDeviceInfo():wx.getSystemInfoSync()).platform==='devtools';}catch(_){return false;}};
+const load=n=>{try{return typeof require==='function'?require(n):null;}catch(_){return null;}};
+const records=load('../../utils/analysis-records'),service=load('../../utils/video-service'),fallback=load('../../utils/back-fallback');
+// 抖音分享口令「4.33 复制打开抖音，看看【xx的作品】# 话题 https://… 口令」只留作品名。
+const shareTitle=v=>{const t=String(v||'');const m=/【([^】]{2,})】/.exec(t);if(m)return m[1].replace(/的(图文|视频)?作品$/,'').trim();return t.split(/https?:\/\//)[0].replace(/^[\d.\s]*复制打开抖音[，,]?\s*(看看)?/,'').replace(/\s+/g,' ').trim();};
+Component({
+ properties:{title:{type:String,value:'有AI'},prefixes:{type:Array,value:[]},root:{type:Boolean,value:false},internal:{type:Boolean,value:false}},
+ data:{top:24,height:48,right:96,busy:false,winW:375,areaH:520,ballSize:60,ballX:8,ballY:320,pressed:false,tasks:[],running:0,ready:0,active:0,sheet:false,hint:false},
+ lifetimes:{attached(){if(this.startRotate)this.startRotate();let info={};try{info=wx.getWindowInfo?wx.getWindowInfo():wx.getSystemInfoSync();}catch(e){}let capsule;try{capsule=wx.getMenuButtonBoundingClientRect();}catch(e){}const top=info.statusBarHeight||24;const valid=capsule&&capsule.height>0;const height=Math.max(48,valid?(capsule.top-top)*2+capsule.height:48);const areaH=Math.max(120,(info.windowHeight||667)-top-height);const winW=info.windowWidth||375;const size=this.data.ballSize;let ballX=8,ballY=Math.max(8,Math.round(areaH*0.55));let saved=null;try{saved=wx.getStorageSync('youai-nav-ball');}catch(e){}if(saved&&isFinite(saved.x)&&isFinite(saved.y)){ballX=Math.max(0,Math.min(Math.round(saved.x),winW-size));ballY=Math.max(0,Math.min(Math.round(saved.y),areaH-size));}this.setData({top,height,right:valid?Math.max(96,winW-capsule.left+8):96,winW,areaH,ballX,ballY});this.loadTasks(true);},detached(){clearTimeout(this._taskTimer);clearTimeout(this._hintTimer);(typeof clearInterval==='function'&&clearInterval(this._rotateTimer));}},
+ pageLifetimes:{show(){this._visible=true;this.loadTasks(true);if(this.startRotate)this.startRotate();},hide(){this._visible=false;clearTimeout(this._taskTimer);(typeof clearInterval==='function'&&clearInterval(this._rotateTimer));}},
+ methods:{
+  // 标题前缀轮换：「做内容 / 做私域 / 玩私域 / 要引流」+ 固定的「有AI」，每 3 秒换一个。
+  startRotate(){(typeof clearInterval==='function'&&clearInterval(this._rotateTimer));const list=(this.properties&&this.properties.prefixes)||[];if(list.length<2){if(list.length===1&&this.data.prefix!==list[0])this.setData({prefix:list[0]});return;}if(!this.data.prefix)this.setData({prefix:list[0],rotIndex:0,rotFlip:'a'});if(typeof setInterval!=='function')return;this._rotateTimer=setInterval(()=>{const items=this.properties.prefixes||[];if(items.length<2)return;const next=((this.data.rotIndex||0)+1)%items.length;this.setData({rotIndex:next,prefix:items[next],rotFlip:this.data.rotFlip==='a'?'b':'a'});},3000);if(this._rotateTimer&&this._rotateTimer.unref)this._rotateTimer.unref();},
+  loadTasks(poll){if(!records)return;let rows=[];try{rows=records.queued(wx);}catch(_){}let cur=null;try{cur=records.live&&records.live(wx);}catch(_){}if(cur&&!rows.some(r=>cur.jobId&&r.jobId===cur.jobId))rows=[{jobId:cur.id,title:cur.title,sourceValue:cur.sourceValue,status:'running',live:true,stage:cur.stage||'进行中',time:cur.startedAt},...rows];this.applyTasks(rows);if(poll&&rows.some(r=>r.status==='running'))this.pollTasks();},
+  applyTasks(rows){const prev=this._status||{},now=Date.now();const tasks=(rows||[]).slice(0,10).map(r=>({jobId:r.jobId,title:(r.title||shareTitle(r.sourceValue)||'抖音视频').slice(0,30),status:r.status,live:!!r.live,stage:r.stage||'',seen:!!r.seen&&r.status!=='running',error:r.error||'',waited:r.status==='running'?Math.max(1,Math.round((now-(r.time||now))/60000)):0}));
+   const finished=tasks.some(t=>t.status==='done'&&prev[t.jobId]==='running');this._status=Object.fromEntries(tasks.map(t=>[t.jobId,t.status]));
+   const running=tasks.filter(t=>t.status==='running').length,ready=tasks.filter(t=>t.status!=='running'&&!t.seen).length;
+   this.setData({tasks,running,ready,active:running+ready,sheet:this.data.sheet&&tasks.length>0});
+   if(finished&&wx.showToast)wx.showToast({title:this.canBack()?'后台拆解完成，长按悬浮球查看':'后台拆解完成，点「任务」查看',icon:'none',duration:2500});
+   if(running+ready)this.maybeHint();},
+  // 点任务行：拆完/失效的任务标记为已查看，角标随之消失；继续拆解点右侧「继续」。
+  markSeen(e){const task=this.data.tasks.find(t=>t.jobId===e.currentTarget.dataset.id);if(!task||task.status==='running'||task.seen||!records)return;records.markSeen(wx,task.jobId);this.loadTasks(false);},
+  canBack(){return !this.properties.root||this.properties.internal;},
+  maybeHint(){if(!this.canBack()||this.data.hint||this._hinted)return;let seen={count:0,last:0};try{seen=wx.getStorageSync(HINT_KEY)||seen;}catch(_){}const now=Date.now();if((seen.count||0)>=HINT_TIMES||now-(seen.last||0)<HINT_GAP)return;this._hinted=true;try{wx.setStorageSync(HINT_KEY,{count:(seen.count||0)+1,last:now});}catch(_){}this.setData({hint:true});clearTimeout(this._hintTimer);this._hintTimer=setTimeout(()=>this.setData({hint:false}),4500);},
+  pollTasks(){clearTimeout(this._taskTimer);if(!records||!service)return;this._taskTimer=setTimeout(async()=>{if(this._visible===false)return;let rows=null;try{rows=await records.sync(wx,path=>new Promise((resolve,reject)=>service.send(wx,{url:service.baseUrl+path,method:'GET',timeout:15000,success:r=>r.statusCode===200?resolve(r.data):reject(Object.assign(Error('refresh'),{statusCode:r.statusCode})),fail:reject})));}catch(_){}if(rows)this.applyTasks(rows);if(this._visible!==false&&(rows||records.queued(wx)).some(r=>r.status==='running'))this.pollTasks();},4000);},
+  openSheet(e){if(this._dragged&&Date.now()-this._dragged<400){this._dragged=0;return;}if(!this.data.tasks.length)return;if(e&&e.type==='longpress'&&wx.vibrateShort&&!devtools())wx.vibrateShort({type:'light',fail(){}});clearTimeout(this._hintTimer);this.setData({sheet:true,hint:false});},
+  closeSheet(){this.setData({sheet:false});},
+  openTask(e){const task=this.data.tasks.find(t=>t.jobId===e.currentTarget.dataset.id);if(!task)return;this.setData({sheet:false});
+   if(task.live){const pages=getCurrentPages(),i=pages.map(p=>p.route).lastIndexOf('pages/video/index');if(i>=0&&i<pages.length-1)wx.navigateBack({delta:pages.length-1-i});return;}
+   if(task.status==='failed'){const row=(records.queued(wx).find(r=>r.jobId===task.jobId))||{};records.dismiss(wx,task.jobId);this.loadTasks(false);wx.navigateTo({url:'/pages/video/index?source=douyin&idea='+encodeURIComponent(row.sourceValue||'')});return;}
+   wx.navigateTo({url:'/pages/video/index?source=douyin&job='+task.jobId});},
+  removeTask(e){if(!records)return;records.dismiss(wx,e.currentTarget.dataset.id);this.loadTasks(false);},
+  allRecords(){this.setData({sheet:false});wx.navigateTo({url:'/pages/analysis-records/index'});},
+  back(){if(this._dragged&&Date.now()-this._dragged<400){this._dragged=0;return;}if(this.data.busy)return;if(this.properties.internal){this.triggerEvent('back');return;}const pages=getCurrentPages(),cur=pages[pages.length-1];if(cur&&typeof cur.onBallBack==='function'&&cur.onBallBack()===true)return;this.setData({busy:true});const done=()=>this.setData({busy:false});const home=reason=>{const go=()=>wx.reLaunch({url:'/pages/main/index',complete:done});if(fallback&&fallback.report)fallback.report(wx,{reason},go);else go();};if(getCurrentPages().length>1)wx.navigateBack({delta:1,success:done,fail:e=>home('返回上一页失败（'+((e&&e.errMsg)||'未知原因')+'）')});else home('当前只有这一页、没有上一页（可能是从分享/扫码直接打开，或上一页被替换掉了）');},
+  onMove(e){const d=e.detail||{};if(!isFinite(d.x)||!isFinite(d.y))return;if(this._startX!=null&&(Math.abs(d.x-this._startX)>6||Math.abs(d.y-this._startY)>6))this._dragged=Date.now();this._x=d.x;this._y=d.y;const now=Date.now();if(!this._savedAt||now-this._savedAt>150){this._savedAt=now;this.persist(Math.round(d.x),Math.round(d.y));}},
+  persist(x,y){try{wx.setStorageSync('youai-nav-ball',{x,y});}catch(e){}},
+  onRelease(){if(this._x==null)return;const size=this.data.ballSize;const w=this.data.winW||375;const zone=w/7;const cx=this._x+size/2;let target;if(cx<=zone)target=8;else if(cx>=w-zone)target=w-size-8;else target=Math.max(0,Math.min(Math.round(this._x),w-size));const tall=this.data.tasks&&this.data.tasks.length?(this.properties.root&&!this.properties.internal?36:100):size;const y=Math.max(0,Math.min(this._y==null?this.data.ballY:this._y,this.data.areaH-tall));this._x=null;this._y=null;this._startX=null;this._startY=null;const patch={};if(target!==this.data.ballX)patch.ballX=target;if(y!==this.data.ballY)patch.ballY=y;if(Object.keys(patch).length)this.setData(patch);this.persist(target,y);},
+  onDown(){this._startX=this.data.ballX;this._startY=this.data.ballY;this.setData({pressed:true});},
+  onUp(){this.setData({pressed:false});this.onRelease();}
+ }
+});

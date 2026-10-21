@@ -1,0 +1,4 @@
+{
+  "management": {"appId": "cli_REPLACE", "appSecret": "REPLACE_IN_EXTERNAL_FILE", "baseToken": "REPLACE", "organization": "海纳众赢"},
+  "archive": {"appId": "cli_REPLACE_ARCHIVE", "appSecret": "REPLACE_IN_EXTERNAL_FILE", "baseToken": "REPLACE", "organization": "飞书个人版组织（商业标准版）"}
+}
