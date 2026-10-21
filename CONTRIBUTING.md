@@ -20,6 +20,7 @@
 git clone https://github.com/JC2065/MCP-douyinvideo.git
 cd MCP-douyinvideo
 node --test tests/*.test.js
+pip install -r scripts/requirements-test.txt
 cd scripts && python3 -m unittest test-creation-board test-mcp-gateway
 ```
 

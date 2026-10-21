@@ -1,0 +1,4 @@
+# 运行后端单元测试所需的最小依赖（生产镜像的完整依赖见 scripts/Dockerfile.video）
+pillow==11.3.0
+imageio-ffmpeg==0.6.0
+numpy==2.5.4
